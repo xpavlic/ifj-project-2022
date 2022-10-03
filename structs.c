@@ -10,6 +10,7 @@
 #define AVG_LEN_MAX 10
 #define AVG_LEN_MIN 5
 
+
 typedef struct htab_item{
     htab_pair_t data;
     struct htab_item * next;
@@ -22,6 +23,17 @@ struct htab{
     htab_item_t ** arr_ptr;
 };
 
+typedef struct symtable_item{
+    struct htab * hash_table;
+    struct symtable_item * next;
+} symtable_item_t;
+
+
+struct symtable{
+    struct symtable_item* head;
+    size_t count;
+    void (*free_func)(void*);
+};
 
 
 #endif
