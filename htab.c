@@ -15,7 +15,6 @@ htab_pair_t * htab_lookup_add(htab_t * t, htab_key_t key)
     {
         if(!strcmp(key,i->data.key))
         {
-            i->data.value++;
             return &(i->data);
         }
         last = i;
@@ -31,7 +30,7 @@ htab_pair_t * htab_lookup_add(htab_t * t, htab_key_t key)
     //setup new item
     strcpy((char*)newitem->data.key,(char*)key);
     newitem->next=NULL;
-    newitem->data.value=1;
+    newitem->data.value=NULL;
 
     //place new item do seznamu
     if(t->arr_ptr[position] == NULL)
@@ -65,7 +64,7 @@ size_t htab_bucket_count(const htab_t * t)     // velikost pole
 
 //File::Clear
 
-void htab_clear(htab_t * t)    // ruší všechny záznamy
+void htab_clear(htab_t * t,void (*f)(void*))    // ruší všechny záznamy
 {
     htab_item_t * start = NULL;
     htab_item_t * tmpnext = NULL;
@@ -79,51 +78,13 @@ void htab_clear(htab_t * t)    // ruší všechny záznamy
         {
             htab_item_t * tmpnext = j->next;
             free((char*)j->data.key);
+            f(j->data.value);
             free(j);
             j = tmpnext;
         }
         t->arr_ptr[i] = NULL;
 
     }
-}
-
-//File::erase
-
-bool htab_erase(htab_t * t, htab_key_t key)    // ruší zadaný záznam
-{
-    if(t==NULL|| key == NULL)
-        return 0;
-
-
-    
-    htab_item_t * previous = NULL;
-    size_t position = (htab_hash_function(key)% t->arr_size);
-    for(htab_item_t * i = t->arr_ptr[position];i!=NULL;i=i->next)
-    {
-        
-        if(!strcmp(key,i->data.key))
-            {
-            free((char*)i->data.key);
-            if(previous==NULL)
-                {t->arr_ptr[position]=i->next;}
-            else
-                {previous->next = i->next;}
-            free(i);
-
-            t->size--;
-
-            //resize
-            if(t->size/t->arr_size < AVG_LEN_MIN && t->size !=0 && t->size !=1)
-            {
-                htab_resize(t,t->arr_size/2);
-            }
-
-
-            return 1;
-            }
-        previous = i;
-    }
-    return 0;
 }
 
 //File::find
@@ -155,9 +116,9 @@ void htab_for_each(const htab_t * t, void (*f)(htab_pair_t *data))
 }
 
 
-void htab_free(htab_t * t)     // destruktor tabulky
+void htab_free(htab_t * t,void (*f)(void*))     // destruktor tabulky
 {
-    htab_clear(t);
+    htab_clear(t,f);
     free(t->arr_ptr);
     free(t);
 }
@@ -196,7 +157,6 @@ htab_t *htab_init(size_t n)
     return mytab;
 }
 
-
 void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
 {         
     //arg check                                     // (umožňuje rezervaci místa)
@@ -215,6 +175,7 @@ void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
     (void)position;
     htab_pair_t * change = NULL;
     
+
     //through ptr array
     for(size_t i = 0;i<t->arr_size;i++)
     {
@@ -228,7 +189,8 @@ void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
         }
     }
     //remove old tab
-    htab_clear(t);
+    void (* f)() =  &nope;
+    htab_clear(t,f);
     free(t->arr_ptr);
     t->arr_ptr=newt->arr_ptr;
     free(newt);
