@@ -1,6 +1,4 @@
 
-//TODO: 
-
 // htab.h -- rozhraní knihovny htab (řešení IJC-DU2)
 // Licence: žádná (Public domain)
 
@@ -22,7 +20,7 @@ typedef int htab_value_t;               // typ hodnoty
 // Dvojice dat v tabulce:
 typedef struct htab_pair {
     htab_key_t    key;          // klíč
-    htab_value_t  value;        // asociovaná hodnota
+    void * value;               // asociovaná hodnota
 } htab_pair_t;                  // typedef podle zadání
 
 // Rozptylovací (hash) funkce (stejná pro všechny tabulky v programu)
@@ -45,7 +43,11 @@ bool htab_erase(htab_t * t, htab_key_t key);    // ruší zadaný záznam
 // Pozor: f nesmí měnit klíč .key ani přidávat/rušit položky
 void htab_for_each(const htab_t * t, void (*f)(htab_pair_t *data));
 
-void htab_clear(htab_t * t);    // ruší všechny záznamy
-void htab_free(htab_t * t);     // destruktor tabulky
+void htab_clear(htab_t * t,void (*f)(void*));    // ruší všechny záznamy
+void htab_free(htab_t * t,void (*f)(void*));     // destruktor tabulky
+
+
+void nope(){} //does nothing
+
 
 #endif // __HTAB_H__
