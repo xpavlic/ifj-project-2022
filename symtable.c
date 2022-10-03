@@ -10,16 +10,16 @@ struct symtable * symtable_init(void (*func)(void*)){
     return ptr;
 }
 
-void symtable_add_frame(struct symtable * st){
+void symtable_add_frame(struct symtable * t){
     //check
-    if(st == NULL) return;
+    if(t == NULL) return;
 
-    st->count++;
-    symtable_item_t * tmp = st->head;
-    st->head = malloc(sizeof(symtable_item_t));
-    st->head->next = tmp;
+    t->count++;
+    symtable_item_t * tmp = t->head;
+    t->head = malloc(sizeof(symtable_item_t));
+    t->head->next = tmp;
 
-    st->head->hash_table = htab_init(HTAB_INIT_VALUE);
+    t->head->hash_table = htab_init(HTAB_INIT_VALUE);
 
 }
 
