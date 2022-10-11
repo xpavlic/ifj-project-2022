@@ -6,14 +6,14 @@
 #include <ctype.h>
 
 
-int line;
-char lastc;
-int indexE;
-int indexH;
+static int line;
+static char lastc;
+static int indexE;
+static int indexH;
 
-char escapeNumber[3];
+static char escapeNumber[3];
 
-char *kwords[] = {
+static char *kwords[] = {
     "else\0",
     "float\0",
     "function\0",
@@ -54,7 +54,6 @@ int get_token(FILE *file, token *tk)
                 }
                 else if ( c == '_')
                 {
-                    add_char(&tk->val, c);
                     state = state_IDENTIFIER;
                 }
                 else if ( isdigit(c) )
@@ -104,8 +103,7 @@ int get_token(FILE *file, token *tk)
                 else if ( c == '<')
                 {
                     add_char(&tk->val, c);
-                    tk->type = state_LESSTHAN;
-                    return 0;
+                    state = state_LESSTHAN;
                 }
                 else if ( c == '?')
                 {
@@ -163,15 +161,38 @@ int get_token(FILE *file, token *tk)
                 }
                 else 
                 {
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
+                }
+            break;
+            
+            case state_LESSTHAN:
+                if( c == '?' )
+                {
                     add_char(&tk->val, c);
-                    state = state_ERROR;
+                    state = state_PROLOG;
+                 
+                }
+                else
+                {
+                    ungetc(c , file);
+                    tk->type = state_LESSTHAN;
+                    return 0;
                 }
             break;
 
-            case state_ERROR:
-                ungetc(c, file);
-                tk->type = state_ERROR;
-                return 1;
+            case state_PROLOG:
+                if( islower( c ) != 0)
+                {
+                    add_char(&tk->val, c);
+                }
+                else
+                {
+                    ungetc(c, file);
+                    tk->type = state_PROLOG;
+                    return 0;
+                }
             break;
             case state_EOL:
                 ungetc(c, file);
@@ -234,6 +255,12 @@ int get_token(FILE *file, token *tk)
                     tk->type = state_VARIABLE;
                     state = state_IDENTIFIER;
                 }
+                else
+                {
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
+                }
             break;
             case state_QUESTIONMARK:
                 if( isalpha(c) )
@@ -242,10 +269,17 @@ int get_token(FILE *file, token *tk)
                     state = state_IDENTIFIER_KEYWORD;
                     lastc = '?';
                 }
+                else if ( c == '>' )
+                {
+                    add_char(&tk->val, c);
+                    tk->type = state_END;
+                    return 0;
+                }
                 else
                 {
                     ungetc(c, file);
-                    state = state_ERROR;
+                    tk->type = state_ERROR;
+                    return 1;
                 }
             break;
             case state_EQUAL:
@@ -271,7 +305,6 @@ int get_token(FILE *file, token *tk)
                 add_char(&tk->val, c);
                 tk->type = state_OPEQUAL;
                 return 0;
-            break;
             case state_INT:
                 if( isdigit(c) )
                 {
@@ -314,7 +347,7 @@ int get_token(FILE *file, token *tk)
                     add_char(&tk->val, c);
 
                 }
-                else if ( c == 'e' || 'E' )
+                else if ( c == 'e' || c == 'E' )
                 {
                     add_char(&tk->val, c);
                     state = state_EXPONENT;
@@ -377,8 +410,9 @@ int get_token(FILE *file, token *tk)
                 }
                 else
                 {
-                    ungetc( c, file);
-                    state = state_ERROR;
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
                 }
             break;
             case state_ESCAPE:
@@ -415,7 +449,8 @@ int get_token(FILE *file, token *tk)
                 else
                 {
                     ungetc(c, file);
-                    state = state_ERROR;
+                    tk->type = state_ERROR;
+                    return 1;
                 }
             break;
             case state_ESCAPE_NUMBER:
@@ -432,13 +467,17 @@ int get_token(FILE *file, token *tk)
                 }
                 else
                 {
-                    state = state_ERROR;
+                   ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
                 }
             break;
             case state_ESCAPE_HEX:
                 if( indexH == 2 )
                 {
-                    state = state_ERROR;
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
                 }
                 if( isxdigit(c) )
                 {
@@ -449,7 +488,9 @@ int get_token(FILE *file, token *tk)
                 }
                 else
                 {
-                    state = state_ERROR;
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
                 }
             break;
             case state_INTDIVIDE:
@@ -502,15 +543,25 @@ int get_token(FILE *file, token *tk)
                     state = state_START;
                 }
             break;
+            case state_ERROR:
+            case state_KEYWORD:
+            case state_VARIABLE:
             case state_EOF:
-                printf("imhere");
-                return 1;
-            break;
-            default:
-            break;
+            case state_TYPE:
+            case state_END:
+            case state_PLUS:
+            case state_MINUS:
+            case state_TIMES:
+            case state_EXCLAMATION:
+            case state_MORETHAN:
+            case state_LEFTPARENT:
+            case state_RIGHTPARENT:
+            case state_CLEFTPARENT:
+            case state_CRIGHTPARENT:
+            case state_CONCANT:
+            case state_SEMICOLON:
+                return 0;
 
         }
     }
-
-    return 1;
 }

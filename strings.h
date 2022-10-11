@@ -15,29 +15,27 @@ typedef struct
 
 /**
  * @brief Initialiazion of string, allocating memory
- * @param dyn_str
- * @return int
+ * @param string dynamic string
 */
 int init_str(dyn_str *string);
 
 /**
  * @brief Free memory of given string
- * @param dyn_str
- * @return void
+ * @param string dynamic string
  */
 void free_str(dyn_str *string);
 
 /**
  * @brief Reallocates memory of string
- * @param dyn_str
- * @return int
+ * @param string dynamic string
+ * @param length length that has to be allocated
  */
-int realloc_str(dyn_str *string, int length);
+int reallocStr(dyn_str *string, unsigned length);
 
 /**
  * @brief Adds char to the end of the string
- * @param dyn_str
- * @param int
+ * @param string dynamic string
+ * @param letter character
  */
 void add_char(dyn_str *string, char letter);
 #endif
