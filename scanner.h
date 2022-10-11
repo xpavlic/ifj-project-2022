@@ -40,6 +40,12 @@ typedef enum {
     state_QUESTIONMARK,
     state_TYPE, //END
 
+    //PROLOG
+    state_PROLOG,
+
+    //END
+    state_END,
+
     // NUMERALS
     state_INT,
     state_DOUBLE,

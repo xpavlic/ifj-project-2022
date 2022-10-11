@@ -31,7 +31,7 @@ void free_str(dyn_str *str)
     str->size = 0;
 }
 
-int reallocStr(dyn_str *str, int length)
+int reallocStr(dyn_str *str, unsigned length)
 {
     str->str = (char*)realloc(str->str, str->size + length * 2);
     if(!str->str)
