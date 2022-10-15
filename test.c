@@ -1,4 +1,4 @@
-#include "symtable.c"
+#include "symtable.h"
 #include <stdio.h>
 
 
