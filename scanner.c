@@ -1,12 +1,5 @@
 #include "scanner.h"
 
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "strings.h"
-
 static int line;
 static char lastc;
 static int indexE;

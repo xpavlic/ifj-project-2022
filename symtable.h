@@ -8,20 +8,11 @@ HOW TO USE
         - value is void* pointer where you can save/put adress of your created structure
 
 */
-
 #ifndef __SYMTABLE_H__
 #define __SYMTABLE_H__
 
-#include "htab.c"
+#include "htab.h"
 #include "structs.c"
-
-/**
- * @brief returned structure from symtable
-*/ 
-typedef struct htab_pair {
-    htab_key_t    key;          // key
-    void * value;               // associated value
-} htab_pair_t;                  // typedef
 
 /**
  * @brief symtable constructor, sets function for later data deallocation

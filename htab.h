@@ -9,22 +9,12 @@
 
 #include <string.h>     // size_t
 #include <stdbool.h>    // bool
+#include <stdint-gcc.h>
+#include "structs.c"
 
 // Table:
-struct htab;    
-typedef struct htab htab_t; 
-
-// Typy:
-typedef const char * htab_key_t;        // type of key
-typedef int htab_value_t;               // type of value
-
-/**
- * @brief pair of key and value
-*/
-typedef struct htab_pair {
-    htab_key_t    key;          // key
-    void * value;               // associated value
-} htab_pair_t;                  // typedef
+struct htab;
+typedef struct htab htab_t;
 
 /**
  * @brief hash function for htab
@@ -100,7 +90,7 @@ void htab_free(htab_t * t,void (*f)(void*));     // destruktor tabulky
 /**
  * @brief does nothing
 */
-void nope(){} //does nothing
+void nope(void); //does nothing
 
 
 #endif // __HTAB_H__

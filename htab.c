@@ -1,6 +1,5 @@
 
 #include "htab.h"
-#include "structs.c"
 
 
 
@@ -48,7 +47,7 @@ htab_pair_t * htab_lookup_add(htab_t * t, htab_key_t key)
         htab_resize(t,2*t->arr_size);
         return htab_find(t,key);
     }
-    
+
     return &(newitem->data);
 
 }
@@ -136,7 +135,7 @@ size_t htab_hash_function(const char *str) {
 }
 
 
-htab_t *htab_init(size_t n)               
+htab_t *htab_init(size_t n)
 {
     if(n<MIN_TABLE_SIZE)
         n = MIN_TABLE_SIZE;
@@ -147,7 +146,7 @@ htab_t *htab_init(size_t n)
     mytab->size = 0;
     mytab->arr_size=n;
     mytab->arr_ptr=NULL;
-    
+
     mytab->arr_ptr = calloc(n,sizeof( htab_item_t *));
     if(mytab->arr_ptr == NULL)
     {
@@ -158,13 +157,13 @@ htab_t *htab_init(size_t n)
 }
 
 void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
-{         
+{
     //arg check                                     // (umožňuje rezervaci místa)
     if (t == NULL)
         return;
     if(newn<MIN_TABLE_SIZE)
         newn = MIN_TABLE_SIZE;
-    
+
     //mallock
     htab_t * newt = htab_init(newn);
     if(newt == NULL)
@@ -174,7 +173,7 @@ void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
     size_t position = 0;
     (void)position;
     htab_pair_t * change = NULL;
-    
+
 
     //through ptr array
     for(size_t i = 0;i<t->arr_size;i++)
@@ -183,7 +182,7 @@ void htab_resize(htab_t *t, size_t newn)       // změna velikosti pole
         //through seznam
         for(htab_item_t * j = start;j!=NULL;j=j->next)
         {
-            
+
             change = htab_lookup_add(newt,j->data.key);
             change->value=j->data.value;
         }
@@ -205,4 +204,6 @@ size_t htab_size(const htab_t * t)             // počet záznamů v tabulce
         return 0;
     return t->size;
 }
+
+void nope(void){} //does nothing
 

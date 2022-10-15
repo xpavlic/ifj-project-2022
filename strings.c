@@ -1,9 +1,5 @@
 #include "strings.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 const size_t dyn_str_init_size = 16;
 
 int init_str(dyn_str *str) {
