@@ -1,10 +1,13 @@
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
-#include "strings.h"
+#include <ctype.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "strings.h"
+
 
 #define EOL '\n'
 

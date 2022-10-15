@@ -1,6 +1,5 @@
 #include "scanner.h"
 
-
 static int line;
 static char lastc;
 static int indexE;
