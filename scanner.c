@@ -1,9 +1,4 @@
-#include <stdio.h>
 #include "scanner.h"
-#include "strings.h"
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
 
 static int line;
@@ -14,290 +9,203 @@ static int indexH;
 static char escapeNumber[3];
 
 static char *kwords[] = {
-    "else\0",
-    "float\0",
-    "function\0",
-    "if\0",
-    "int\0",
-    "null\0",
-    "return\0",
-    "string\0",
-    "void\0",
-    "while\0",
+    "else\0", "float\0",  "function\0", "if\0",   "int\0",
+    "null\0", "return\0", "string\0",   "void\0", "while\0",
 };
 
-
-int get_token(FILE *file, token *tk)
-{
+int get_token(FILE *file, token *tk) {
     state state = state_START;
-    //free_str(&tk->val);
+    // free_str(&tk->val);
     init_str(&tk->val);
 
     char c;
-    while( 1 )
-    {
+    while (1) {
         c = getc(file);
 
-        switch (state)
-        {
+        switch (state) {
             case state_START:
 
-                if ( isspace(c) != 0 )
-                {
-                    state = state_START;    
-                }
-                else if ( isalpha(c) )
-                {
+                if (isspace(c) != 0) {
+                    state = state_START;
+                } else if (isalpha(c)) {
                     add_char(&tk->val, c);
                     state = state_IDENTIFIER_KEYWORD;
 
-                }
-                else if ( c == '_')
-                {
+                } else if (c == '_') {
                     state = state_IDENTIFIER;
-                }
-                else if ( isdigit(c) )
-                {
+                } else if (isdigit(c)) {
                     add_char(&tk->val, c);
                     state = state_INT;
-                }
-                else if ( c == '+' )
-                {
+                } else if (c == '+') {
                     add_char(&tk->val, c);
                     tk->type = state_PLUS;
                     return 0;
-                }
-                else if ( c == '-' )
-                {
+                } else if (c == '-') {
                     add_char(&tk->val, c);
                     tk->type = state_MINUS;
                     return 0;
-                }
-                else if ( c == '/' )
-                {
+                } else if (c == '/') {
                     add_char(&tk->val, c);
                     state = state_INTDIVIDE;
-                }
-                else if ( c == '*' )
-                {
+                } else if (c == '*') {
                     add_char(&tk->val, c);
                     tk->type = state_TIMES;
                     return 0;
-                }
-                else if ( c == '=')
-                {
+                } else if (c == '=') {
                     add_char(&tk->val, c);
                     state = state_EQUAL;
-                }
-                else if ( c == '!')
-                {
+                } else if (c == '!') {
                     add_char(&tk->val, c);
                     state = state_EXCLAMATION;
-                }
-                else if ( c == '>')
-                {
+                } else if (c == '>') {
                     add_char(&tk->val, c);
                     tk->type = state_MORETHAN;
                     return 0;
-                }
-                else if ( c == '<')
-                {
+                } else if (c == '<') {
                     add_char(&tk->val, c);
                     state = state_LESSTHAN;
-                }
-                else if ( c == '?')
-                {
+                } else if (c == '?') {
                     add_char(&tk->val, c);
                     state = state_QUESTIONMARK;
-                }
-                else if ( c == '(')
-                {
+                } else if (c == '(') {
                     add_char(&tk->val, c);
                     tk->type = state_LEFTPARENT;
                     return 0;
-                }
-                else if ( c == ')')
-                {
+                } else if (c == ')') {
                     add_char(&tk->val, c);
                     tk->type = state_RIGHTPARENT;
                     return 0;
-                }
-                else if ( c == '$')
-                {
+                } else if (c == '$') {
                     add_char(&tk->val, c);
                     state = state_DOLLAR;
-                }
-                else if ( c == '.')
-                {
+                } else if (c == '.') {
                     add_char(&tk->val, c);
                     tk->type = state_CONCANT;
                     return 0;
-                }
-                else if ( c == ';')
-                {
+                } else if (c == ';') {
                     add_char(&tk->val, c);
                     tk->type = state_SEMICOLON;
                     return 0;
-                }
-                else if ( c == '{')
-                {
+                } else if (c == '{') {
                     add_char(&tk->val, c);
                     tk->type = state_CLEFTPARENT;
                     return 0;
-                }
-                else if ( c == '}')
-                {
+                } else if (c == '}') {
                     add_char(&tk->val, c);
                     tk->type = state_CRIGHTPARENT;
                     return 0;
-                }
-                else if ( c == EOF)
-                {
+                } else if (c == EOF) {
                     state = state_EOF;
-                }   
-                else if ( c == EOL )
-                {   
+                } else if (c == EOL) {
                     state = state_EOL;
-                }
-                else 
-                {
+                } else if (c == '"') {
+                    state = state_STRING;
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
-            
+                break;
+
             case state_LESSTHAN:
-                if( c == '?' )
-                {
+                if (c == '?') {
                     add_char(&tk->val, c);
                     state = state_PROLOG;
-                 
-                }
-                else
-                {
-                    ungetc(c , file);
+
+                } else {
+                    ungetc(c, file);
                     tk->type = state_LESSTHAN;
                     return 0;
                 }
-            break;
+                break;
 
             case state_PROLOG:
-                if( islower( c ) != 0)
-                {
+                if (islower(c) != 0) {
                     add_char(&tk->val, c);
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_PROLOG;
                     return 0;
                 }
-            break;
+                break;
             case state_EOL:
                 ungetc(c, file);
                 line++;
                 state = state_START;
-            break;                
+                break;
             case state_IDENTIFIER:
-                if ( c == '_' || isalpha(c) || isdigit(c) )
-                {
+                if (c == '_' || isalpha(c) || isdigit(c)) {
                     add_char(&tk->val, c);
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
-                    if( tk->type == state_VARIABLE )
-                    {
+                    if (tk->type == state_VARIABLE) {
                         return 0;
-                    }
-                    else
-                    {
+                    } else {
                         tk->type = state_IDENTIFIER;
                         return 0;
                     }
                 }
-            break;
+                break;
             case state_IDENTIFIER_KEYWORD:
-                if( isalpha(c) )
-                {
+                if (isalpha(c)) {
                     add_char(&tk->val, c);
-                }
-                else if ( c == '_' || isdigit(c) )
-                {
-                    if( lastc == '?')
-                    {
+                } else if (c == '_' || isdigit(c)) {
+                    if (lastc == '?') {
                         ungetc(c, file);
                         tk->type = state_TYPE;
                         return 0;
                     }
-                    
+
                     add_char(&tk->val, c);
                     state = state_IDENTIFIER;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
-                    for(int i = 0; i < 9;  i++)
-                    {
-                        if( !strcmp(tk->val.str, kwords[i]))
-                        {
+                    for (int i = 0; i < 9; i++) {
+                        if (!strcmp(tk->val.str, kwords[i])) {
                             tk->type = state_KEYWORD;
                             return 0;
                         }
                     }
                 }
-            break;
+                break;
             case state_DOLLAR:
-                if( c == '_' || isalpha(c) )
-                {
+                if (c == '_' || isalpha(c)) {
                     add_char(&tk->val, c);
                     tk->type = state_VARIABLE;
                     state = state_IDENTIFIER;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_QUESTIONMARK:
-                if( isalpha(c) )
-                {
+                if (isalpha(c)) {
                     add_char(&tk->val, c);
                     state = state_IDENTIFIER_KEYWORD;
                     lastc = '?';
-                }
-                else if ( c == '>' )
-                {
+                } else if (c == '>') {
                     add_char(&tk->val, c);
                     tk->type = state_END;
                     return 0;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_EQUAL:
-                if( c == '=')
-                {
+                if (c == '=') {
                     add_char(&tk->val, c);
                     state = state_OPEQUAL;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_EQUAL;
                     return 0;
                 }
-            break;
+                break;
             case state_OPEQUAL:
-                if( c != '=')
-                {
+                if (c != '=') {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
@@ -306,243 +214,176 @@ int get_token(FILE *file, token *tk)
                 tk->type = state_OPEQUAL;
                 return 0;
             case state_INT:
-                if( isdigit(c) )
-                {
+                if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    
-                }
-                else if ( c == '.')
-                {
+
+                } else if (c == '.') {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE;
-                }
-                else if ( c == 'e' || c == 'E')
-                {
+                    state = state_DDOT;
+                } else if (c == 'e' || c == 'E') {
                     add_char(&tk->val, c);
                     state = state_EXPONENT;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_INT;
                     return 0;
                 }
-            break;
+                break;
             case state_DDOT:
-                if(isdigit(c))
-                {
+                if (isdigit(c)) {
                     add_char(&tk->val, c);
                     state = state_DOUBLE;
-                }
-                else
-                {
+                } else {
                     add_char(&tk->val, c);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_DOUBLE_N:
-                if(isdigit(c))
-                {
+                if (isdigit(c)) {
                     add_char(&tk->val, c);
+                    state = state_DOUBLE;
 
-                }
-                else if ( c == 'e' || c == 'E' )
-                {
+                } else if (c == 'e' || c == 'E') {
                     add_char(&tk->val, c);
                     state = state_EXPONENT;
-                }
-                else
-                {
+                } else {
                     add_char(&tk->val, c);
-                    
                 }
 
-            break;
+                break;
             case state_EXPONENT:
-                if( isdigit(c) )
-                {
+                if (isdigit(c)) {
                     add_char(&tk->val, c);
                     state = state_DOUBLE;
-                    
-                }
-                else if ( c == '+' || c == '-')
-                {
+
+                } else if (c == '+' || c == '-') {
                     add_char(&tk->val, c);
                     state = state_DOUBLE;
-                }
-                else
-                {
+                } else {
                     add_char(&tk->val, c);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_DOUBLE:
-                if(isdigit(c))
-                {
+                if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    
-                }
-                else
-                {
+
+                } else {
                     ungetc(c, file);
                     tk->type = state_DOUBLE;
                     return 0;
                 }
-            break;
+                break;
             case state_STRING:
-                if( c == '"')
-                {
+                if (c == '"') {
                     add_char(&tk->val, c);
                     tk->type = state_STRING;
                     return 1;
-                }
-                else if ( c == '\\')
-                {
-                    add_char(&tk->val, c );
+                } else if (c == '\\') {
+                    add_char(&tk->val, c);
                     state = state_ESCAPE;
 
-                }
-                else if ( c > 31)
-                {
-                    add_char( &tk->val, c);
-                }
-                else
-                {
+                } else if (c > 31) {
+                    add_char(&tk->val, c);
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_ESCAPE:
-                if( c == '\\')
-                {
-                    add_char( &tk->val, c);
-                    state = state_STRING;
-                }
-                else if ( c == 't')
-                {
-                    add_char( &tk->val, c);
-                    state = state_STRING;
-                }
-                else if ( c == 'n')
-                {
+                if (c == '\\') {
                     add_char(&tk->val, c);
                     state = state_STRING;
-                }
-                else if ( c == '"')
-                {
-                    add_char( &tk->val, c);
+                } else if (c == 't') {
+                    add_char(&tk->val, c);
                     state = state_STRING;
-                }
-                else if ( isdigit(c) )
-                {
-                    add_char( &tk->val, c );
+                } else if (c == 'n') {
+                    add_char(&tk->val, c);
+                    state = state_STRING;
+                } else if (c == '"') {
+                    add_char(&tk->val, c);
+                    state = state_STRING;
+                } else if (isdigit(c)) {
+                    add_char(&tk->val, c);
                     state = state_ESCAPE_NUMBER;
-                }
-                else if ( c == 'x')
-                {
-                    add_char( &tk->val, c );
+                } else if (c == 'x') {
+                    add_char(&tk->val, c);
                     state = state_ESCAPE_HEX;
-                }
-                else
-                {
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_ESCAPE_NUMBER:
-                if( isdigit(c) )
-                {
+                if (isdigit(c)) {
                     indexE++;
                     add_char(&tk->val, c);
                     escapeNumber[indexE] = c;
-                    if ( atoi(escapeNumber) > 0 && atoi(escapeNumber) <= 255 && (int)(escapeNumber[2]) > 0)
-                    {
+                    if (atoi(escapeNumber) > 0 && atoi(escapeNumber) <= 255 &&
+                        (int)(escapeNumber[2]) > 0) {
                         state = state_STRING;
                     }
-                    
-                }
-                else
-                {
-                   ungetc(c, file);
-                    tk->type = state_ERROR;
-                    return 1;
-                }
-            break;
-            case state_ESCAPE_HEX:
-                if( indexH == 2 )
-                {
+
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-                if( isxdigit(c) )
-                {
-                
+                break;
+            case state_ESCAPE_HEX:
+                if (indexH == 2) {
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
+                }
+                if (isxdigit(c)) {
                     indexH++;
                     add_char(&tk->val, c);
-                    
-                }
-                else
-                {
+
+                } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
-            break;
+                break;
             case state_INTDIVIDE:
-                if( c == '/')
-                {
+                if (c == '/') {
                     state = state_COMMENT;
-                }
-                else if ( c == '*')
-                {
+                } else if (c == '*') {
                     state = state_BLOCK_COMMENT;
-                }
-                else
-                {
-                    ungetc(c , file);
+                } else {
+                    ungetc(c, file);
                     tk->type = state_INTDIVIDE;
                 }
-            break;
+                break;
             case state_COMMENT:
-                if( c != EOL || c != EOF )
-                {
+                if (c != EOL || c != EOF) {
                     state = state_COMMENT;
-                }
-                else
-                {
+                } else {
                     state = state_START;
                 }
-            break;
+                break;
             case state_BLOCK_COMMENT:
-                if( c == '*')
-                {
+                if (c == '*') {
                     state = state_BLOCK_COMMENT_END;
-                }
-                else if ( c == EOF)
-                {
+                } else if (c == EOF) {
                     tk->type = state_EOF;
                     return 0;
-                }
-                else
-                {
+                } else {
                     state = state_BLOCK_COMMENT;
                 }
-            break;
+                break;
             case state_BLOCK_COMMENT_END:
-                if( c != '/')
-                {
+                if (c != '/') {
                     state = state_BLOCK_COMMENT;
-                }
-                else
-                {
+                } else {
                     state = state_START;
                 }
-            break;
+                break;
             case state_ERROR:
             case state_KEYWORD:
             case state_VARIABLE:
@@ -561,7 +402,6 @@ int get_token(FILE *file, token *tk)
             case state_CONCANT:
             case state_SEMICOLON:
                 return 0;
-
         }
     }
 }
