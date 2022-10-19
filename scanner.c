@@ -231,7 +231,7 @@ int get_token(FILE *file, token *tk) {
             case state_DDOT:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE;
+                    state = state_DOUBLE_N;
                 } else {
                     add_char(&tk->val, c);
                     tk->type = state_ERROR;
