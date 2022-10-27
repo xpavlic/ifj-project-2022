@@ -16,20 +16,16 @@ int get_token(FILE *file, token *tk) {
     state state = state_START;
     // free_str(&tk->val);
     init_str(&tk->val);
-
     char c;
     while (1) {
         c = getc(file);
-
         switch (state) {
             case state_START:
-
                 if (isspace(c) != 0) {
                     state = state_START;
                 } else if (isalpha(c)) {
                     add_char(&tk->val, c);
                     state = state_IDENTIFIER_KEYWORD;
-
                 } else if (c == '_') {
                     state = state_IDENTIFIER;
                 } else if (isdigit(c)) {
@@ -44,7 +40,7 @@ int get_token(FILE *file, token *tk) {
                     tk->type = state_MINUS;
                     return 0;
                 } else if (c == '/') {
-                    add_char(&tk->val, c);
+                    ungetc(c, file);
                     state = state_INTDIVIDE;
                 } else if (c == '*') {
                     add_char(&tk->val, c);
@@ -77,6 +73,10 @@ int get_token(FILE *file, token *tk) {
                 } else if (c == '$') {
                     add_char(&tk->val, c);
                     state = state_DOLLAR;
+                } else if (c == ',') {
+                    add_char( &tk->val, c);
+                    state = state_COMMA;
+                    return 0;
                 } else if (c == '.') {
                     add_char(&tk->val, c);
                     tk->type = state_CONCANT;
@@ -94,11 +94,19 @@ int get_token(FILE *file, token *tk) {
                     tk->type = state_CRIGHTPARENT;
                     return 0;
                 } else if (c == EOF) {
-                    state = state_EOF;
+                    tk->type = state_EOF;
+                    return 0;
                 } else if (c == EOL) {
-                    state = state_EOL;
+                    tk->type = state_EOL;
+                    tk->line++;
+                    return 0;
                 } else if (c == '"') {
+                    add_char(&tk->val, c);
                     state = state_STRING;
+                } else if ( c == ':') {
+                    add_char(&tk->val, c);
+                    tk->type = state_COLON;
+                    return 0;
                 } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
@@ -156,6 +164,7 @@ int get_token(FILE *file, token *tk) {
                     }
 
                     add_char(&tk->val, c);
+                    printf("%c", c);
                     state = state_IDENTIFIER;
                 } else {
                     ungetc(c, file);
@@ -165,6 +174,8 @@ int get_token(FILE *file, token *tk) {
                             return 0;
                         }
                     }
+
+                    state = state_IDENTIFIER;
                 }
                 break;
             case state_DOLLAR:
@@ -279,7 +290,7 @@ int get_token(FILE *file, token *tk) {
                 if (c == '"') {
                     add_char(&tk->val, c);
                     tk->type = state_STRING;
-                    return 1;
+                    return 0;
                 } else if (c == '\\') {
                     add_char(&tk->val, c);
                     state = state_ESCAPE;
@@ -351,18 +362,18 @@ int get_token(FILE *file, token *tk) {
                 break;
             case state_INTDIVIDE:
                 if (c == '/') {
+                    ungetc(c, file);
                     state = state_COMMENT;
                 } else if (c == '*') {
                     state = state_BLOCK_COMMENT;
                 } else {
-                    ungetc(c, file);
+                    add_char(&tk->val, c);
                     tk->type = state_INTDIVIDE;
                 }
                 break;
             case state_COMMENT:
-                if (c != EOL || c != EOF) {
-                    state = state_COMMENT;
-                } else {
+                if ( c == EOL || c == EOF) {
+                    ungetc(c, file);
                     state = state_START;
                 }
                 break;
@@ -399,6 +410,8 @@ int get_token(FILE *file, token *tk) {
             case state_CLEFTPARENT:
             case state_CRIGHTPARENT:
             case state_CONCANT:
+            case state_COMMA:
+            case state_COLON:
             case state_SEMICOLON:
                 return 0;
         }
