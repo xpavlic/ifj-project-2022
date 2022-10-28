@@ -43,8 +43,7 @@ int del_last(dyn_str *str) {
     if(str->length == 0)
         return 1;
     
-
-    str->str[str->length] = '\0';
     str->length--;
+    str->str[str->length] = '\0';
     return 0;
 }
