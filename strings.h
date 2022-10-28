@@ -31,6 +31,13 @@ void free_str(dyn_str *string);
  */
 int add_char(dyn_str *string, char letter);
 
+/**
+ * @brief Deletes last character in string
+ * @param string
+ * @return 0 if success, else 1
+ */
+int del_last(dyn_str *string);
+
 #ifdef __cplusplus
 }
 #endif

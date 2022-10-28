@@ -40,7 +40,7 @@ int get_token(FILE *file, token *tk) {
                     tk->type = state_MINUS;
                     return 0;
                 } else if (c == '/') {
-                    ungetc(c, file);
+                    add_char(&tk->val, c);
                     state = state_INTDIVIDE;
                 } else if (c == '*') {
                     add_char(&tk->val, c);
@@ -363,12 +363,13 @@ int get_token(FILE *file, token *tk) {
             case state_INTDIVIDE:
                 if (c == '/') {
                     ungetc(c, file);
+                    del_last(&tk->val);
                     state = state_COMMENT;
                 } else if (c == '*') {
                     state = state_BLOCK_COMMENT;
-                } else {
-                    add_char(&tk->val, c);
+                } else {   
                     tk->type = state_INTDIVIDE;
+                    return 0;
                 }
                 break;
             case state_COMMENT:
