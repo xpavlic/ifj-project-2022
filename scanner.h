@@ -72,6 +72,9 @@ typedef enum {
     state_CLEFTPARENT, //END
     state_CRIGHTPARENT, //END
 
+    state_COMMA,
+    state_COLON,
+
     // STRINGS
     state_STRING,
     state_ESCAPE,
