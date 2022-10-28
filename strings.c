@@ -42,7 +42,9 @@ int add_char(dyn_str *str, char c) {
 int del_last(dyn_str *str) {
     if(str->length == 0)
         return 1;
-        
+    
+
     str->str[str->length] = '\0';
+    str->length--;
     return 0;
 }
