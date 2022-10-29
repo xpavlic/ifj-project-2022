@@ -5,16 +5,14 @@ static int indexE;
 static int indexH;
 
 static char *kwords[] = {
-    "else\0", "float\0",  "function\0", "if\0",   "int\0",
-    "null\0", "return\0", "string\0",   "void\0", "while\0",
+        "else\0", "float\0",  "function\0", "if\0",   "int\0",
+        "null\0", "return\0", "string\0",   "void\0", "while\0",
 };
 
-int get_token(FILE *file, token *tk) {
+int get_token(FILE *file, Token *tk) {
     state state = state_START;
     indexE = 0;
     indexH = 0;
-    //free_str(&tk->val);
-    init_str(&tk->val);
     char c;
     while (1) {
         c = getc(file);
