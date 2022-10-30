@@ -27,9 +27,18 @@ void free_str(dyn_str *string);
  * @brief Adds char to the end of the string
  * @param string dynamic string
  * @param letter character
- * @return 0 if success, else 1
+ * @return void
  */
-int add_char(dyn_str *string, char letter);
+void add_char(dyn_str *string, char letter);
+
+
+/**
+ * @brief Reallocates memory of string
+ * @param dyn_str
+ * @return void
+*/
+int realloc_str(dyn_str *string);
+
 
 /**
  * @brief Deletes last character in string
