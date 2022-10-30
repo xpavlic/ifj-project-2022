@@ -391,6 +391,7 @@ int get_token(FILE *file, token *tk) {
                 if (c != '/') {
                     state = state_BLOCK_COMMENT;
                 } else {
+                    del_last(&tk->val);
                     state = state_START;
                 }
                 break;
