@@ -1,7 +1,7 @@
 #include "scanner.h"
 
 static int line;
-static char lastc;
+static int flag;
 static int indexE;
 static int indexH;
 
@@ -14,7 +14,7 @@ static char *kwords[] = {
 
 int get_token(FILE *file, token *tk) {
     state state = state_START;
-    // free_str(&tk->val);
+    //free_str(&tk->val);
     init_str(&tk->val);
     char c;
     while (1) {
@@ -157,17 +157,15 @@ int get_token(FILE *file, token *tk) {
                 if (isalpha(c)) {
                     add_char(&tk->val, c);
                 } else if (c == '_' || isdigit(c)) {
-                    if (lastc == '?') {
+                    add_char(&tk->val, c);
+                    state = state_IDENTIFIER;
+                } else {
+                    ungetc(c, file);
+                    if (flag == 1) {
                         ungetc(c, file);
                         tk->type = state_TYPE;
                         return 0;
                     }
-
-                    add_char(&tk->val, c);
-                    printf("%c", c);
-                    state = state_IDENTIFIER;
-                } else {
-                    ungetc(c, file);
                     for (int i = 0; i < 9; i++) {
                         if (!strcmp(tk->val.str, kwords[i])) {
                             tk->type = state_KEYWORD;
@@ -193,7 +191,7 @@ int get_token(FILE *file, token *tk) {
                 if (isalpha(c)) {
                     add_char(&tk->val, c);
                     state = state_IDENTIFIER_KEYWORD;
-                    lastc = '?';
+                    flag = 1;
                 } else if (c == '>') {
                     add_char(&tk->val, c);
                     tk->type = state_END;
@@ -367,7 +365,8 @@ int get_token(FILE *file, token *tk) {
                     state = state_COMMENT;
                 } else if (c == '*') {
                     state = state_BLOCK_COMMENT;
-                } else {   
+                } else {
+                    ungetc(c, file);
                     tk->type = state_INTDIVIDE;
                     return 0;
                 }
