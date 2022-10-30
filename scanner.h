@@ -51,9 +51,10 @@ typedef enum {
 
     // NUMERALS
     state_INT,
-    state_DOUBLE,
-    state_DDOT,
-    state_DOUBLE_N,
+    state_FLOAT,
+    state_FDOT,
+    state_FLOAT_N,
+    state_FLOAT_EN,
     state_EXPONENT,
 
     state_PLUS, //END
@@ -78,8 +79,8 @@ typedef enum {
     // STRINGS
     state_STRING,
     state_ESCAPE,
-    state_ESCAPE_NUMBER,
-    state_ESCAPE_HEX,
+    //state_ESCAPE_NUMBER,
+    //state_ESCAPE_HEX,
     state_CONCANT, //END
 
     //Comments
