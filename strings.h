@@ -31,15 +31,6 @@ void free_str(dyn_str *string);
  */
 void add_char(dyn_str *string, char letter);
 
-
-/**
- * @brief Reallocates memory of string
- * @param dyn_str
- * @return void
-*/
-int realloc_str(dyn_str *string);
-
-
 /**
  * @brief Deletes last character in string
  * @param string
