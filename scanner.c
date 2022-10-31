@@ -1,11 +1,8 @@
 #include "scanner.h"
 
 static int line;
-static int flag;
 static int indexE;
 static int indexH;
-
-static char escapeNumber[3];
 
 static char *kwords[] = {
     "else\0", "float\0",  "function\0", "if\0",   "int\0",
@@ -14,6 +11,8 @@ static char *kwords[] = {
 
 int get_token(FILE *file, token *tk) {
     state state = state_START;
+    indexE = 0;
+    indexH = 0;
     //free_str(&tk->val);
     init_str(&tk->val);
     char c;
@@ -75,7 +74,7 @@ int get_token(FILE *file, token *tk) {
                     state = state_DOLLAR;
                 } else if (c == ',') {
                     add_char( &tk->val, c);
-                    state = state_COMMA;
+                    tk->type = state_COMMA;
                     return 0;
                 } else if (c == '.') {
                     add_char(&tk->val, c);
@@ -116,7 +115,7 @@ int get_token(FILE *file, token *tk) {
 
             case state_LESSTHAN:
                 if (c == '?') {
-                    add_char(&tk->val, c);
+                    add_char(&tk->val, '?');
                     state = state_PROLOG;
 
                 } else {
@@ -129,6 +128,7 @@ int get_token(FILE *file, token *tk) {
             case state_PROLOG:
                 if (islower(c) != 0) {
                     add_char(&tk->val, c);
+
                 } else {
                     ungetc(c, file);
                     tk->type = state_PROLOG;
@@ -161,13 +161,17 @@ int get_token(FILE *file, token *tk) {
                     state = state_IDENTIFIER;
                 } else {
                     ungetc(c, file);
-                    if (flag == 1) {
-                        ungetc(c, file);
-                        tk->type = state_TYPE;
+                    if(!strcmp(tk->val.str, "?float") || !strcmp(tk->val.str, "?int") || !strcmp(tk->val.str, "?string"))
+                    {
                         return 0;
                     }
                     for (int i = 0; i < 9; i++) {
                         if (!strcmp(tk->val.str, kwords[i])) {
+                            if(!strcmp(tk->val.str, "float") || !strcmp(tk->val.str, "int") || !strcmp(tk->val.str, "string"))
+                            {
+                                tk->type = state_TYPE;
+                                return 0;
+                            }
                             tk->type = state_KEYWORD;
                             return 0;
                         }
@@ -190,8 +194,8 @@ int get_token(FILE *file, token *tk) {
             case state_QUESTIONMARK:
                 if (isalpha(c)) {
                     add_char(&tk->val, c);
+                    tk->type = state_TYPE;
                     state = state_IDENTIFIER_KEYWORD;
-                    flag = 1;
                 } else if (c == '>') {
                     add_char(&tk->val, c);
                     tk->type = state_END;
@@ -227,7 +231,7 @@ int get_token(FILE *file, token *tk) {
 
                 } else if (c == '.') {
                     add_char(&tk->val, c);
-                    state = state_DDOT;
+                    state = state_FDOT;
                 } else if (c == 'e' || c == 'E') {
                     add_char(&tk->val, c);
                     state = state_EXPONENT;
@@ -237,20 +241,20 @@ int get_token(FILE *file, token *tk) {
                     return 0;
                 }
                 break;
-            case state_DDOT:
+            case state_FDOT:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE_N;
+                    state = state_FLOAT_N;
                 } else {
                     add_char(&tk->val, c);
                     tk->type = state_ERROR;
                     return 1;
                 }
                 break;
-            case state_DOUBLE_N:
+            case state_FLOAT_N:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE;
+                    state = state_FLOAT;
 
                 } else if (c == 'e' || c == 'E') {
                     add_char(&tk->val, c);
@@ -263,24 +267,33 @@ int get_token(FILE *file, token *tk) {
             case state_EXPONENT:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE;
-
+                    state = state_FLOAT;
                 } else if (c == '+' || c == '-') {
                     add_char(&tk->val, c);
-                    state = state_DOUBLE;
+                    state = state_FLOAT_EN;
                 } else {
                     add_char(&tk->val, c);
                     tk->type = state_ERROR;
                     return 1;
                 }
                 break;
-            case state_DOUBLE:
+            case state_FLOAT_EN:
+                if (isdigit(c)) {
+                    add_char(&tk->val, c);
+                    state = state_FLOAT;
+                } else {
+                    ungetc(c , file);
+                    tk->type = state_ERROR;
+                    return 1;
+                }
+                break;
+            case state_FLOAT:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
 
                 } else {
                     ungetc(c, file);
-                    tk->type = state_DOUBLE;
+                    tk->type = state_FLOAT;
                     return 0;
                 }
                 break;
@@ -316,32 +329,31 @@ int get_token(FILE *file, token *tk) {
                     state = state_STRING;
                 } else if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_ESCAPE_NUMBER;
+                    state = state_STRING;
                 } else if (c == 'x') {
                     add_char(&tk->val, c);
-                    state = state_ESCAPE_HEX;
+                    state = state_STRING;
                 } else {
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
                 break;
-            case state_ESCAPE_NUMBER:
+
+            /*case state_ESCAPE_NUMBER:
                 if (isdigit(c)) {
                     indexE++;
-                    add_char(&tk->val, c);
                     escapeNumber[indexE] = c;
-                    if (atoi(escapeNumber) > 0 && atoi(escapeNumber) <= 255 &&
-                        (int)(escapeNumber[2]) > 0) {
-                        state = state_STRING;
-                    }
-
+                    add_char(&tk->val, c);
+                    state = state_ESCAPE_NUMBER;
                 } else {
+
                     ungetc(c, file);
                     tk->type = state_ERROR;
                     return 1;
                 }
                 break;
+          
             case state_ESCAPE_HEX:
                 if (indexH == 2) {
                     ungetc(c, file);
@@ -357,7 +369,7 @@ int get_token(FILE *file, token *tk) {
                     tk->type = state_ERROR;
                     return 1;
                 }
-                break;
+                break;*/
             case state_INTDIVIDE:
                 if (c == '/') {
                     ungetc(c, file);
@@ -391,6 +403,7 @@ int get_token(FILE *file, token *tk) {
                 if (c != '/') {
                     state = state_BLOCK_COMMENT;
                 } else {
+                    del_last(&tk->val);
                     state = state_START;
                 }
                 break;
