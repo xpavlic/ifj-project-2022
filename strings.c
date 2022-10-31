@@ -22,26 +22,25 @@ void free_str(dyn_str *str) {
     str->size = 0;
 }
 
-void add_char(dyn_str *str, char c) {
-
+int add_char(dyn_str *str, char c) {
     if (str->length >= str->size) {
-
         str->size *= 2;
         str->str = (char *)realloc(str->str, str->size);
-        if(!str->str)
+        if (!str->str) {
             return 1;
-    
+        }
     }
     str->str[str->length] = c;
     str->length++;
     str->str[str->length] = '\0';
+    return 0;
 }
 
 int del_last(dyn_str *str) {
     if(str->length == 0)
         return 1;
-    
-    str->str[str->length] = '\0';
+
     str->length--;
+    str->str[str->length] = '\0';
     return 0;
 }
