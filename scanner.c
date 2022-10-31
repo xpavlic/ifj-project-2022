@@ -74,7 +74,7 @@ int get_token(FILE *file, token *tk) {
                     state = state_DOLLAR;
                 } else if (c == ',') {
                     add_char( &tk->val, c);
-                    state = state_COMMA;
+                    tk->type = state_COMMA;
                     return 0;
                 } else if (c == '.') {
                     add_char(&tk->val, c);
