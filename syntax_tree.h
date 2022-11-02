@@ -30,8 +30,26 @@ enum tree_node_type{
 };
 
 
+
 struct tree_node;
 struct tn_data;
+
+
+struct tree_node{
+    size_t count;
+    struct tree_node * sibling;
+    struct tree_node * parent;
+    struct tree_node * head_child;
+    struct tree_node * tail_child;
+    
+    struct tn_data * data;
+
+};
+
+struct tn_data{
+    enum tree_node_type type;
+    char*value;
+};
 
 
 /**

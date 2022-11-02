@@ -1,26 +1,5 @@
 #include "syntax_tree.h"
 
-struct tree_node;
-struct tn_data;
-
-
-struct tree_node{
-    size_t count;
-    struct tree_node * sibling;
-    struct tree_node * parent;
-    struct tree_node * head_child;
-    struct tree_node * tail_child;
-    
-    struct tn_data * data;
-
-};
-
-struct tn_data{
-    enum tree_node_type type;
-    char*value;
-};
-
-
 
 struct tn_data * init_tn_data(int type, const char(* value)){
     struct tn_data * data = malloc(sizeof(struct tn_data));
