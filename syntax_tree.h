@@ -15,18 +15,19 @@ enum tree_node_type{
     BODY,
     FUNC_DEC,
     FUNC_CALL,
-    ASSAIGN,
+    ASSIGN,
+    FIRST_ASSIGN,
     IF,
     WHILE,
     ARGUMENTS,
     ARGUMENT,
     EXPRESSION,
-    CONDITION,
     TYPE,
     NAME,
     OPERATOR,
     OPERAND,
-    
+    VAR_OPERAND,
+    RETURN,
 };
 
 
@@ -37,7 +38,7 @@ struct tn_data;
 
 struct tree_node{
     size_t count;
-    struct tree_node * sibling;
+    struct tree_node * next_sibling;
     struct tree_node * parent;
     struct tree_node * head_child;
     struct tree_node * tail_child;

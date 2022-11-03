@@ -26,7 +26,7 @@ struct tree_node * init_tree_node(){
     node->data = NULL;
     node->head_child = NULL;
     node->parent = NULL;
-    node->sibling = NULL;
+    node->next_sibling = NULL;
     node->tail_child = NULL;
 
     return node;
@@ -42,7 +42,7 @@ struct tree_node * add_tree_node(struct tree_node *parent_node,int type, const c
         parent_node->tail_child = new_node;
     }
     else{
-        parent_node->tail_child->sibling = new_node;
+        parent_node->tail_child->next_sibling = new_node;
         parent_node->tail_child = new_node;
     }
     return new_node;
@@ -58,7 +58,7 @@ void free_tree_data(struct tn_data *data){
 
 void free_children(struct tree_node * node){
     for(struct tree_node * child_node = node->head_child;child_node!=NULL;){
-        struct tree_node * tmp_sibling = child_node->sibling;
+        struct tree_node * tmp_sibling = child_node->next_sibling;
         free_tree_node(child_node);
         child_node = tmp_sibling;
     }
