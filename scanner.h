@@ -7,20 +7,13 @@
 #include <string.h>
 
 #include "strings.h"
+#include "token_stack.h"
 
 
 #define EOL '\n'
 
-typedef struct
-{
-    dyn_str val;
-    int type;
-    int line;
 
-}token;
-
-
-int get_token(FILE *file, token *tk);
+int get_token(FILE *file, Token *tk);
 
 
 typedef enum {

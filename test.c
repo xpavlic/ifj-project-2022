@@ -23,7 +23,7 @@ void check_empty(struct symtable * t,char*string){
 }
 
 
-int main(){
+int main_(){
     printf("START\n");
 
     struct symtable * t = symtable_init(&free_string);
