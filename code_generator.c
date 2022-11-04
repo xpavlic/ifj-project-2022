@@ -11,6 +11,7 @@ TODO:
     function ord(string $c) : int //
 
 
+12) dělení nefunguje
 */
 
 /*
@@ -37,12 +38,6 @@ while:
     !WHILE%d
     !WEND%d
 */
-
-
-//TODO: remove define
-//#define VAR_OPERAND 150
-//#define FIRST_ASSIGN 300
-//#define RETURN 450
 
 /**
  * @brief generates code based on syntax tree
@@ -101,7 +96,7 @@ void pushs_arguments(struct tree_node * node){
         pushs_arguments(node->next_sibling);
     }
     print_expression_node(node);
-    printf("PUSHS GF@_result");
+    printf("PUSHS GF@_result\n");
 }
 
 ///////////////////////////////////////////////////////
@@ -171,7 +166,7 @@ void print_decfunc_node(struct tree_node * node){
     //do body
     print_body_node(find_child_node(node, BODY));
 
-    printf("MOVE GF@_result null@null");
+    printf("MOVE GF@_result nil@nil\n");
     printf("POPFRAME\n");
     printf("RETURN\n");
 
@@ -201,19 +196,18 @@ void print_strlen(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
-    printf("STRLEN GF@_result GF@_result");
+    printf("STRLEN GF@_result GF@_result\n");
 }
 //void ord(struct tree_node * node) is normal function
 void chr(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
-    printf("INT2CHAR GF@_result GF@_result");
+    printf("INT2CHAR GF@_result GF@_result\n");
 }
 
 
 
-//TODO: for inbuild functions that doesnt work normally
 void print_callfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;
     if(!strcmp(func_name,"write")){
@@ -296,7 +290,7 @@ void print_if_node(struct tree_node * node){
 void print_while_node(struct tree_node * node){
     static size_t counter = 0;
     //LABEL WHILE
-    printf("LABEL !WHILE%d\n",counter);
+    printf("LABEL !WHILE%ld\n",counter);
     //EVALUEATE EXPRESSION
     print_expression_node(node->head_child);
     //JUMP CONDITIONAL END
@@ -392,29 +386,29 @@ void choose_expr_print(struct tree_node * node){
     }
     //null
     else{ 
-        printf("PUSHS null@%s\n",node->data->value);
+        printf("PUSHS nil@nil\n");
     }
 }
 
 void print_string_for_expression(char * string){
     printf("PUSHS string@");
     for(size_t i = 0;string[i]!='\0';i++){
-        if(string[i]<32 || string[i]==35 || string[i] == 92){
-            printf("%03d", string[i]);
+        if(string[i]<=32 || string[i]==35 || string[i] == 92){
+            printf("\\%03d", string[i]);
         }
         else{
             putchar(string[i]);
         }
     }
     printf("\n");
-    
+
     return;
 }
 
 void print_expression_node(struct tree_node * node){
     //if function has return without value
     if(node == NULL){
-        printf("MOVE GF@_result null@null");
+        printf("MOVE GF@_result nil@nil\n");
         return;
     }
     //postorder tree traversal
@@ -439,6 +433,8 @@ void print_init_code(){
 
     //frame for main body local variables
 
+    printf(".IFJcode22\n");
+
     printf("DEFVAR GF@_result\n");
     printf("DEFVAR GF@_tmp\n");
     
@@ -454,12 +450,12 @@ void print_codefunc_int2float_conversion(){
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
 
-    printf("TYPE GF@_result GF@op1\n");
-    printf("JUMPIFEQ !int2float_conversion GF@_result string@float");
+    printf("TYPE GF@_result GF@_op1\n");
+    printf("JUMPIFEQ !int2float_conversion GF@_result string@float\n");
     //if is same as float jump to conversion
-    printf("TYPE GF@_result GF@op2\n");
+    printf("TYPE GF@_result GF@_op2\n");
     //if is same as float jump to conversion 
-    printf("JUMPIFEQ !int2float_conversion GF@_result string@float");
+    printf("JUMPIFEQ !int2float_conversion GF@_result string@float\n");
     //both are int
     printf("PUSHS GF@_op1\n");
     printf("PUSHS GF@_op2\n");
@@ -468,8 +464,8 @@ void print_codefunc_int2float_conversion(){
     //conversion here
     //at least one of them is float
     printf("LABEL !int2float_conversion\n");
-    printf("INT2FLOAT GF@_op1\n");
-    printf("INT2FLOAT GF@_op2\n");
+    printf("INT2FLOAT GF@_op1 GF@_op1\n");
+    printf("INT2FLOAT GF@_op2 GF@_op2\n");
     printf("PUSHS GF@_op1\n");
     printf("PUSHS GF@_op2\n");
     printf("RETURN\n");
@@ -489,10 +485,10 @@ void print_EQS_LTS_GTS(char* instruction){
     printf("PUSHS GF@_op2\n");
 
 
-    printf("TYPE GF@op1 GF@op1\n");
-    printf("TYPE GF@op2 GF@op2\n");
+    printf("TYPE GF@_op1 GF@_op1\n");
+    printf("TYPE GF@_op2 GF@_op2\n");
 
-    printf("JUMPIFNEQ !else%s GF@op1 GF@op2\n",instruction);
+    printf("JUMPIFNEQ !else%s GF@_op1 GF@_op2\n",instruction);
 
 
     printf("%s\n",instruction);
@@ -522,39 +518,39 @@ void print_NLTS_NGTS(char*instruction){
     //check if one of them is null ""  0
 
 
-    printf("TYPE GF@_result GF_op1\n"); //type
-    printf("MOVE GF@_tmp GF@_op1"); //value
-    printf("JUMPIFEQ !isnull%s GF@_result string@null\n",instruction);
+    printf("TYPE GF@_result GF@_op1\n"); //type
+    printf("MOVE GF@_tmp GF@_op1\n"); //value
+    printf("JUMPIFEQ !isnull%s GF@_result string@nil\n",instruction);
     printf("JUMPIFEQ !isstring%s GF@_result string@string\n",instruction);
     printf("JUMPIFEQ !isint%s GF@_result string@int\n",instruction);
 
-    printf("TYPE GF@_result GF_op2\n"); //type
-    printf("MOVE GF@_tmp GF@_op2"); //value
-    printf("JUMPIFEQ !isnull%s GF@_result string@null\n",instruction);
+    printf("TYPE GF@_result GF@_op2\n"); //type
+    printf("MOVE GF@_tmp GF@_op2\n"); //value
+    printf("JUMPIFEQ !isnull%s GF@_result string@nil\n",instruction);
     printf("JUMPIFEQ !isstring%s GF@_result string@string\n",instruction);
     printf("JUMPIFEQ !isint%s GF@_result string@int\n",instruction);
 
         printf("JUMP !skip_scpecial_condition%s\n",instruction);
         //is type null
         printf("LABEL !isnull%s\n",instruction);
-            printf("JUMPIFEQ !true%s GF@_tmp null@null\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp nil@nil\n",instruction);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
         printf("LABEL !isstring%s\n",instruction);
             printf("JUMPIFEQ !true%s GF@_tmp string@\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s",instruction);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
         printf("LABEL !isint%s\n",instruction);
             printf("JUMPIFEQ !true%s GF@_tmp int@0\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s",instruction);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
 
 
-        printf("LABEL !skip_scpecial_condition%s",instruction);
+        printf("LABEL !skip_scpecial_condition%s\n",instruction);
     
     
     //end of checking for null "" 0
     printf("TYPE GF@_op1 GF@_op1\n");
     printf("TYPE GF@_op2 GF@_op2\n");
 
-    printf("JUMPINFEQ !false%s GF@op1 GF@op2\n",instruction);
+    printf("JUMPIFNEQ !false%s GF@_op1 GF@_op2\n",instruction);
 
 //if
     printf("%s\n",&(instruction[1]));
@@ -593,10 +589,10 @@ void code_generator(struct tree_node * node){
 
     //TODO: inbuld functions here
 
-    //TODO: implicit coversion INTtoFLOAT
+    //implicit coversion INTtoFLOAT
     print_codefunc_int2float_conversion();
 
-    //TODO: comparison
+    //comparison
     print_EQS_LTS_GTS("EQS");
     print_EQS_LTS_GTS("LTS");
     print_EQS_LTS_GTS("GTS");
