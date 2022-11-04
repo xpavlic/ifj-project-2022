@@ -1,12 +1,7 @@
 #include "syntax_tree.h"
 /*
 TODO:
-asi good 7) check poradi zpracovavanych deti u vsech funkcí podle diagramu
-8) datové typy zápis
-9) implicitní konverze
-10) jmena argumentu pri volani funkce + jmena v expressionu
-
-TODO: signalizace typu konstanty
+9) implicitní konverze u aritmetických operací // asi z mat. operací udělat funkce
 
 11)
     function floatval(term) : float
@@ -45,9 +40,9 @@ while:
 
 
 //TODO: remove define
-#define VAR_OPERAND 150
-#define FIRST_ASSIGN 300
-#define RETURN 450
+//#define VAR_OPERAND 150
+//#define FIRST_ASSIGN 300
+//#define RETURN 450
 
 /**
  * @brief generates code based on syntax tree
@@ -91,7 +86,7 @@ void print_return_node(struct tree_node * node);
 
 struct tree_node * find_child_node(struct tree_node * node, int type){
     if(node == NULL) return NULL;
-    for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->sibling){
+    for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
         if(child_node->data->type == type){
             return child_node;
         }
@@ -99,12 +94,12 @@ struct tree_node * find_child_node(struct tree_node * node, int type){
     return NULL;
 }
 
-
 void pushs_arguments(struct tree_node * node){
-    if (node->sibling!=NULL){
-        call_arguments(node->sibling);
-    }    
-    printf("PUSHS %s",node->data->value);
+    if (node->next_sibling!=NULL){
+        call_arguments(node->next_sibling);
+    }
+    print_expression_node(node);
+    printf("PUSHS GF@_result");
 }
 
 ///////////////////////////////////////////////////////
@@ -123,7 +118,7 @@ void inbody_scan_node(struct tree_node * node){
     case FUNC_CALL:
         print_callfunc_node(node);
         break;
-    case ASSAIGN:
+    case ASSIGN:
         print_assaign_node(node);
         break;
     case FIRST_ASSIGN:
@@ -144,7 +139,7 @@ void inbody_scan_node(struct tree_node * node){
 
 void print_body_node(struct tree_node * body){
     if(body == NULL) return;
-    for(struct tree_node * child_node = body->head_child;child_node!=NULL;child_node=child_node->sibling){
+    for(struct tree_node * child_node = body->head_child;child_node!=NULL;child_node=child_node->next_sibling){
         inbody_scan_node(child_node);
     }
 }
@@ -163,7 +158,7 @@ void print_decfunc_node(struct tree_node * node){
 
     //for each argument do pop do promenne se jmenem argumentu
     
-    for(struct tree_node * argument = find_child_node(node, ARGUMENTS)->head_child;argument!=NULL;argument=argument->sibling){
+    for(struct tree_node * argument = find_child_node(node, ARGUMENTS)->head_child;argument!=NULL;argument=argument->next_sibling){
         printf("DEFVAR LF@%s\n",argument->data->value);
         printf("POPS LF@%s\n",argument->data->value);
     }
@@ -192,7 +187,7 @@ void print_readf(){
 void print_write(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
-    for(struct tree_node * child_node = arguments_node->head_child;child_node!=NULL;child_node=child_node->sibling){
+    for(struct tree_node * child_node = arguments_node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
         print_expression_node(child_node);
         printf("WRITE GF@_result\n");
     }
@@ -281,13 +276,13 @@ void print_if_node(struct tree_node * node){
     //LABEL IF
     printf("LABEL !IF%d\n",counter);
     //IF-BODY
-    print_body_node(node->head_child->sibling);
+    print_body_node(node->head_child->next_sibling);
     //JUMP ELSEEND
     printf("JUMP !ELSEEND%d\n",counter);
     //LABEL ELSE
     printf("LABEL !ELSE%d\n",counter);
     //ELSE-BODY
-    print_body_node(node->head_child->sibling->sibling);
+    print_body_node(node->head_child->next_sibling->next_sibling);
     //LABEL ELSEEND
     printf("LABEL !ELSEEND%d\n",counter);
 
@@ -317,8 +312,8 @@ void postorder(struct tree_node * node){
     if(node!=NULL){
         postorder(node->head_child);
         postorder(node->tail_child);
+        choose_expr_print(node);
     }
-    choose_expr_print(node);
 }
 
 void print_operator(char * value){
@@ -375,17 +370,47 @@ void choose_expr_print(struct tree_node * node){
         //print push variable
         printf("PUSHS LF@%s\n",node->data->value);
     }
-    //constant
-    else{
-        printf("PUSHS %s\n",node->data->value);
+    //int
+    else if(node->data->type == T_INT){
+        printf("PUSHS int@%s\n",node->data->value);
     }
+    //float
+    else if(node->data->type == T_FLOAT){
+        //print push variable
+        float float_number = strtof (node->data->value, NULL);
+        printf("PUSHS float@%a\n",float_number);
+    }
+    //string
+    else if(node->data->type == T_STRING){
+        //print push variable
+        //printf("PUSHS string@%s\n",node->data->value); but with added escape sequences
+        print_string_for_expression(node->data->value);
+    }
+    //null
+    else{ 
+        printf("PUSHS null@%s\n",node->data->value);
+    }
+}
+
+print_string_for_expression(char * string){
+    printf("PUSHS string@");
+    for(size_t i = 0;string[i]!="\0";i++){
+        if(string[i]<32 || string[i]==35 || string[i] == 92){
+            printf("%03d", string[i]);
+        }
+        else{
+            putchar(string[i]);
+        }
+    }
+    printf("\n");
 }
 
 void print_expression_node(struct tree_node * node){
     //if function has return without value
     if(node == NULL){
         printf("MOVE GF@_result null@null");
-        return;}
+        return;
+    }
     //postorder tree traversal
     postorder(node);
 
@@ -395,8 +420,6 @@ void print_expression_node(struct tree_node * node){
 
 void print_return_node(struct tree_node * node){
     print_expression_node(node->head_child);
-    //give result to result
-    printf("POPS GF@_result\n");
     //remove frame
     printf("POPFRAME\n");
     //return
