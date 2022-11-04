@@ -1,15 +1,21 @@
 #include "syntax_tree.h"
 /*
 TODO:
-6) poresit special funkce
-    - tak se prej chovaji mega divne, musi se v3e udelat pres vyjimky pri volani funkci
-    - potreba vlastni implementace
-7) check poradi zpracovavanych deti u vsech funkcí podle diagramu
+asi good 7) check poradi zpracovavanych deti u vsech funkcí podle diagramu
 8) datové typy zápis
 9) implicitní konverze
+10) jmena argumentu pri volani funkce + jmena v expressionu
 
 TODO: signalizace typu konstanty
-TODO: signalizace ze return type je null
+
+11)
+    function floatval(term) : float
+    function intval(term) : int
+    function strval(term) : string
+    function substring(string $𝑠, int $𝑖, int $𝑗) : ?string
+    function ord(string $c) : int //
+
+
 */
 
 /*
@@ -83,7 +89,15 @@ void print_return_node(struct tree_node * node);
 //////////////////////////////////////////////////////////
 */
 
-
+struct tree_node * find_child_node(struct tree_node * node, int type){
+    if(node == NULL) return NULL;
+    for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->sibling){
+        if(child_node->data->type == type){
+            return child_node;
+        }
+    }
+    return NULL;
+}
 
 
 void pushs_arguments(struct tree_node * node){
@@ -104,10 +118,10 @@ void inbody_scan_node(struct tree_node * node){
         print_body_node(node);
         break;
     case FUNC_DEC:
-        print_funcdec_node(node);
+        print_decfunc_node(node);
         break;
     case FUNC_CALL:
-        print_funccall_node(node);
+        print_callfunc_node(node);
         break;
     case ASSAIGN:
         print_assaign_node(node);
@@ -137,7 +151,7 @@ void print_body_node(struct tree_node * body){
 
 
 void print_decfunc_node(struct tree_node * node){
-    char * func_name = node->head_child->data->value;
+    char * func_name = find_child_node(node, NAME)->data->value;
     printf("JUMP !S%s\n",func_name);
      
     //label samotne funkce
@@ -146,30 +160,97 @@ void print_decfunc_node(struct tree_node * node){
     //nový rámec pro proměnné argumentu
     printf("CREATEFRAME\n");
     printf("PUSHFRAME\n");
+
     //for each argument do pop do promenne se jmenem argumentu
     
-    for(struct tree_node * argument = node->head_child->sibling->head_child;argument!=NULL;argument=argument->sibling){
+    for(struct tree_node * argument = find_child_node(node, ARGUMENTS)->head_child;argument!=NULL;argument=argument->sibling){
         printf("DEFVAR LF@%s\n",argument->data->value);
         printf("POPS LF@%s\n",argument->data->value);
     }
 
 
     //do body
-    print_body_node(node->head_child->sibling->sibling->sibling);
+    print_body_node(find_child_node(node, BODY));
 
+    printf("MOVE GF@_result null@null");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
 
     printf("LABEL !S%s\n",func_name);
 }
 
-void print_callfunc_node(struct tree_node * node){
-    char * func_name = node->head_child->data->value;
 
+void print_reads(){
+    printf("READ GF@_result string\n");
+}
+void print_readi(){
+    printf("READ GF@_result int\n");
+}
+void print_readf(){
+    printf("READ GF@_result float\n");
+}
+void print_write(struct tree_node * node){
+    struct tree_node * arguments_node;
+    arguments_node = find_child_node(node, ARGUMENTS);
+    for(struct tree_node * child_node = arguments_node->head_child;child_node!=NULL;child_node=child_node->sibling){
+        print_expression_node(child_node);
+        printf("WRITE GF@_result\n");
+    }
+
+}
+void print_strlen(struct tree_node * node){
+    struct tree_node * arguments_node;
+    arguments_node = find_child_node(node, ARGUMENTS);
+    print_expression_node(arguments_node->head_child);
+    printf("STRLEN GF@_result GF@_result");
+}
+//void ord(struct tree_node * node) is normal function
+void chr(struct tree_node * node){
+    struct tree_node * arguments_node;
+    arguments_node = find_child_node(node, ARGUMENTS);
+    print_expression_node(arguments_node->head_child);
+    printf("INT2CHAR GF@_result GF@_result");
+}
+
+
+
+//TODO: for inbuild functions that doesnt work normally
+void print_callfunc_node(struct tree_node * node){
+    char * func_name = find_child_node(node, NAME)->data->value;
+    if(!strcmp(func_name,"write")){
+        print_write(node);
+    }
+    else if(!strcmp(func_name,"reads")){
+        print_reads();
+    }
+    else if(!strcmp(func_name,"readi")){
+        print_readi();
+    }
+    else if(!strcmp(func_name,"readf")){
+        print_readf();
+    }
+    else if(!strcmp(func_name,"strlen")){
+        print_strlen(node);
+    }
+    else if(!strcmp(func_name,"chr")){
+        print_reads(node);
+    }
+    else{
+        print_general_callfunc_node(node);
+    }
+}
+
+
+void print_general_callfunc_node(struct tree_node * node){
+    char * func_name = find_child_node(node, NAME)->data->value;    
     //move every argumentu into stack
-    pushs_arguments(node->tail_child->head_child);
+    pushs_arguments(find_child_node(node, ARGUMENTS)->head_child);
 
     //call function
     printf("CALL %s\n",func_name);
+
 }
+
 
 void print_first_assaign_node(struct tree_node * node){
     printf("DEFVAR LF@%s\n");
@@ -206,7 +287,7 @@ void print_if_node(struct tree_node * node){
     //LABEL ELSE
     printf("LABEL !ELSE%d\n",counter);
     //ELSE-BODY
-    print_body_node(node->head_child->sibling);
+    print_body_node(node->head_child->sibling->sibling);
     //LABEL ELSEEND
     printf("LABEL !ELSEEND%d\n",counter);
 
@@ -301,6 +382,10 @@ void choose_expr_print(struct tree_node * node){
 }
 
 void print_expression_node(struct tree_node * node){
+    //if function has return without value
+    if(node == NULL){
+        printf("MOVE GF@_result null@null");
+        return;}
     //postorder tree traversal
     postorder(node);
 
@@ -490,6 +575,14 @@ void code_generator(struct tree_node * node){
     print_NLTS_NGTS("NGTS");
     //TODO: zbytek
 
+    /*
+    TODO:
+    function floatval(term) : float
+    function intval(term) : int
+    function strval(term) : string
+    function substring(string $𝑠, int $𝑖, int $𝑗) : ?string
+    function ord(string $c) : int //
+    */
 
 
     printf("CALL !MAIN\n");
