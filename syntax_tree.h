@@ -25,7 +25,10 @@ enum tree_node_type{
     TYPE,
     NAME,
     OPERATOR,
-    OPERAND,
+    T_STRING,
+    T_INT,
+    T_FLOAT,
+    T_NULL,
     VAR_OPERAND,
     RETURN,
 };
