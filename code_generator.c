@@ -74,10 +74,12 @@ void print_operation_node(struct tree_node * node);
 void postorder(struct tree_node * node);
 void print_operator(char * value);
 
-void print_assaign_first_node(struct tree_node * node);
+void print_first_assign_node(struct tree_node * node);
 void print_return_node(struct tree_node * node);
 
-
+void print_general_callfunc_node(struct tree_node * node);
+void choose_expr_print(struct tree_node * node);
+void print_string_for_expression(char * string);
 /*
 ///////////////////////////////////////////////////////////
                  HELP FUNCTIONS
@@ -96,7 +98,7 @@ struct tree_node * find_child_node(struct tree_node * node, int type){
 
 void pushs_arguments(struct tree_node * node){
     if (node->next_sibling!=NULL){
-        call_arguments(node->next_sibling);
+        pushs_arguments(node->next_sibling);
     }
     print_expression_node(node);
     printf("PUSHS GF@_result");
@@ -122,16 +124,18 @@ void inbody_scan_node(struct tree_node * node){
         print_assaign_node(node);
         break;
     case FIRST_ASSIGN:
-        print_first_assaign_node(node);
+        print_first_assign_node(node);
         break;
     case RETURN:
-        print_return(node);
+        print_return_node(node);
         break;
     case IF:
         print_if_node(node);
         break;
     case WHILE:
         print_while_node(node);
+        break;
+    default:
         break;
     }
 }
@@ -247,8 +251,8 @@ void print_general_callfunc_node(struct tree_node * node){
 }
 
 
-void print_first_assaign_node(struct tree_node * node){
-    printf("DEFVAR LF@%s\n");
+void print_first_assign_node(struct tree_node * node){
+    printf("DEFVAR LF@%s\n",node->head_child->data->value);
     print_assaign_node(node);
 }
 
@@ -270,21 +274,21 @@ void print_if_node(struct tree_node * node){
     //VYHODNOTIT EXPRESSION
     print_expression_node(node->head_child);
     //JUMP conditional IF
-    printf("JUMPIFNEQ !IF%d GF@_result 0\n",counter);
+    printf("JUMPIFNEQ !IF%ld GF@_result 0\n",counter);
     //JUMP ELSE
-    printf("JUMP !ELSE%d\n",counter);
+    printf("JUMP !ELSE%ld\n",counter);
     //LABEL IF
-    printf("LABEL !IF%d\n",counter);
+    printf("LABEL !IF%ld\n",counter);
     //IF-BODY
     print_body_node(node->head_child->next_sibling);
     //JUMP ELSEEND
-    printf("JUMP !ELSEEND%d\n",counter);
+    printf("JUMP !ELSEEND%ld\n",counter);
     //LABEL ELSE
-    printf("LABEL !ELSE%d\n",counter);
+    printf("LABEL !ELSE%ld\n",counter);
     //ELSE-BODY
     print_body_node(node->head_child->next_sibling->next_sibling);
     //LABEL ELSEEND
-    printf("LABEL !ELSEEND%d\n",counter);
+    printf("LABEL !ELSEEND%ld\n",counter);
 
     counter++;
 }
@@ -296,13 +300,13 @@ void print_while_node(struct tree_node * node){
     //EVALUEATE EXPRESSION
     print_expression_node(node->head_child);
     //JUMP CONDITIONAL END
-    printf("JUMPIFNEQ !WEND%d GF@_result 0\n",counter);
+    printf("JUMPIFNEQ !WEND%ld GF@_result 0\n",counter);
     //BODY
     print_body_node(node->tail_child);
     //JUMP WHILE
-    printf("LABEL !WHILE%d\n",counter);
+    printf("LABEL !WHILE%ld\n",counter);
     //LABEL END
-    printf("LABEL !WEND%d\n",counter);
+    printf("LABEL !WEND%ld\n",counter);
 
 
     counter++;
@@ -392,9 +396,9 @@ void choose_expr_print(struct tree_node * node){
     }
 }
 
-print_string_for_expression(char * string){
+void print_string_for_expression(char * string){
     printf("PUSHS string@");
-    for(size_t i = 0;string[i]!="\0";i++){
+    for(size_t i = 0;string[i]!='\0';i++){
         if(string[i]<32 || string[i]==35 || string[i] == 92){
             printf("%03d", string[i]);
         }
@@ -403,6 +407,8 @@ print_string_for_expression(char * string){
         }
     }
     printf("\n");
+    
+    return;
 }
 
 void print_expression_node(struct tree_node * node){
