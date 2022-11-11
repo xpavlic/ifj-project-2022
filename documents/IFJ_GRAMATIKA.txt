@@ -1,0 +1,47 @@
+<prolog> -> <?php declare(strict_types=1); <prog>
+<prog> -> function id ( <param> ) <ret_type> { <body> } <prog>
+<prog> -> id ( <arg> ) ; <prog>
+<prog> -> $id = <assign> ; <prog>
+<prog> -> if ( <expr> ) { <body> } else { <body> } <prog>
+<prog> -> while ( <expr> ) { <body> } <prog>
+<prog> -> return <return_n> ; <prog>
+<prog> -> ?>
+<prog> -> EOF
+
+<param> -> <type> $id <next_param>
+<param> -> ε
+<next_param> -> , <type> $id <next_param>
+<next_param> -> ε
+
+<arg> -> <term> <next_arg>
+<arg> -> ε
+<next_arg> -> , <term> <next_arg> 
+<next_arg> -> ε
+
+<term> -> $id
+<term> -> term_int 
+<term> -> term_float
+<term> -> null
+<term> -> term_string
+
+<ret_type> -> : <type>
+<ret_type> -> ε
+
+<body> -> id ( <arg> ) ; <body>
+<body> -> if ( <expr> ) { <body> } else { <body> } <body>
+<body> -> while ( <expr> ) { <body> } <body>
+<body> -> $id = <assign> ; <body>
+<body> -> return <return_n> ; <body>
+<body> -> ε
+
+<assign> -> <expr>
+<assign> -> id ( <arg> )
+
+<return_n> -> <expr>
+
+<type> -> ?string
+<type> -> string
+<type> -> ?int
+<type> -> int
+<type> -> ?float
+<type> -> float
