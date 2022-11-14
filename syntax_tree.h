@@ -25,6 +25,7 @@ enum tree_node_type{
 
     OPERATOR, // string
 
+    EXPRESSION, // null
     //TERMINALS
     T_STRING, //string
     T_INT, // string
@@ -40,7 +41,7 @@ enum tree_node_type{
     FLOAT_PARAMETER,// string
 
     ARGUMENT, //TO DELETE, instead use 'terminal'/VAR_OPERAND
-    EXPRESSION, // TO DELETE, instead use OPERATOR/terminal/VAR_OPERAND
+    
 
 };
 
