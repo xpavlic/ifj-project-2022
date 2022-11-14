@@ -1,17 +1,10 @@
 #include "syntax_tree.h"
+
 /*
 TODO:
-9) implicitní konverze u aritmetických operací // asi z mat. operací udělat funkce
+13) check kontrola pouzivani stromu
 
-11)
-    function floatval(term) : float
-    function intval(term) : int
-    function strval(term) : string
-    function substring(string $𝑠, int $𝑖, int $𝑗) : ?string
-    function ord(string $c) : int //
-
-
-12) dělení nefunguje
+implicitni konverze DONE
 */
 
 /*
@@ -97,6 +90,11 @@ void pushs_arguments(struct tree_node * node){
     }
     print_expression_node(node);
     printf("PUSHS GF@_result\n");
+}
+
+void implicit_conversion_result(char * type){
+    printf("PUSHS GF@_result\n");
+    printf("CALL %sval\n",type);
 }
 
 ///////////////////////////////////////////////////////
@@ -328,7 +326,15 @@ void print_operator(char * value){
         printf("MULS\n");
     }
     else if(!strcmp(value,"/")){
+        // both operands to float
         printf("CALL !int_to_float\n");
+        printf("CALL floatval\n");
+        printf("MOVE GF@_op2 GF@_result\n");
+        printf("CALL floatval\n");
+        printf("MOVE GF@_op1 GF@_result\n");
+        printf("PUSHS GF@_op1\n");
+        printf("PUSHS GF@_op2\n");
+
         printf("DIVS\n");
     }
     else if(!strcmp(value,".")){
@@ -464,8 +470,20 @@ void print_codefunc_int2float_conversion(){
     //conversion here
     //at least one of them is float
     printf("LABEL !int2float_conversion\n");
+    
+    printf("TYPE GF@_result GF@_op1\n");
+
+    printf("TYPE GF@_result GF@_op1\n");
+    printf("JUMPIFEQ !int2float_skip_op1 GF@_result string@float\n");
     printf("INT2FLOAT GF@_op1 GF@_op1\n");
+    printf("LABEL !int2float_skip_op1\n");
+
+    printf("TYPE GF@_result GF@_op2\n");
+    printf("JUMPIFEQ !int2float_skip_op2 GF@_result string@float\n");
     printf("INT2FLOAT GF@_op2 GF@_op2\n");
+    printf("LABEL !int2float_skip_op2\n");
+
+
     printf("PUSHS GF@_op1\n");
     printf("PUSHS GF@_op2\n");
     printf("RETURN\n");
@@ -581,13 +599,197 @@ void print_NLTS_NGTS(char*instruction){
 }
 
 
+void print_floatval(){
+    printf("JUMP !skipfloat_val\n");
+    printf("LABEL floatval\n");
+    printf("POPS GF@_result\n");
+    printf("TYPE GF@_tmp GF@_result\n"); // in tmp is type
 
+    printf("JUMPIFEQ !float_val_int GF@_tmp string@int\n");
+    printf("JUMPIFEQ !float_val_float GF@_tmp string@float\n");
+    printf("JUMPIFEQ !float_val_string GF@_tmp string@string\n");
+    printf("JUMPIFEQ !float_val_null GF@_tmp string@nil\n");
+
+    printf("LABEL !float_val_float \n");
+    printf("RETURN\n");
+
+    printf("LABEL !float_val_null \n");
+    printf("INT2FLOAT GF@_result int@0\n");
+    printf("RETURN\n");
+
+    printf("LABEL !float_val_string \n");
+   // printf("STRING2FLOAT GF@_result GF@_result\n");
+   //EXTENSION 
+    printf("RETURN\n");
+
+    printf("LABEL !float_val_int \n");
+    printf("INT2FLOAT GF@_result GF@_result \n");
+    printf("RETURN\n");
+
+    printf("LABEL !float_val_end\n");
+    printf("LABEL !skipfloat_val\n");
+}
+
+
+void print_intval(){
+    printf("JUMP !skipint_val\n");
+    printf("LABEL intval\n");
+    printf("POPS GF@_result\n");
+    printf("TYPE GF@_tmp GF@_result\n"); // in tmp is type
+
+    printf("JUMPIFEQ !int_val_int GF@_tmp string@int\n");
+    printf("JUMPIFEQ !int_val_float GF@_tmp string@float\n");
+    printf("JUMPIFEQ !int_val_string GF@_tmp string@string\n");
+    printf("JUMPIFEQ !int_val_null GF@_tmp string@nil\n");
+
+    printf("LABEL !int_val_int \n");
+    printf("RETURN\n");
+
+    printf("LABEL !int_val_null \n");
+    printf("MOVE GF@_result int@0\n");
+    printf("RETURN\n");
+
+    printf("LABEL !int_val_string \n");
+
+    //printf("STRING2INT GF@_result GF@_result\n");
+    //extension
+    printf("RETURN\n");
+
+    printf("LABEL !int_val_float \n");
+    printf("FLOAT2INT GF@_result GF@_result \n");
+    printf("RETURN\n");
+
+    printf("LABEL !int_val_end\n");
+    printf("LABEL !skipint_val\n");
+}
+
+
+void print_strval(){
+    printf("JUMP !skipstr_val\n");
+    printf("LABEL strval\n");
+    printf("POPS GF@_result\n");
+    printf("TYPE GF@_tmp GF@_result\n"); // in tmp is type
+
+    printf("JUMPIFEQ !str_val_int GF@_tmp string@int\n");
+    printf("JUMPIFEQ !str_val_float GF@_tmp string@float\n");
+    printf("JUMPIFEQ !str_val_string GF@_tmp string@string\n");
+    printf("JUMPIFEQ !str_val_null GF@_tmp string@nil\n");
+
+    printf("LABEL !str_val_string \n");
+    printf("RETURN\n");
+
+    printf("LABEL !str_val_null \n");
+    printf("MOVE GF@_result string@\n");
+    printf("RETURN\n");
+/* zbytek je rozsireni*/
+    printf("LABEL !str_val_int\n"); 
+    printf("RETURN\n");
+
+    printf("LABEL !str_val_float\n"); 
+    printf("RETURN\n");
+/**/
+    printf("LABEL !str_val_end\n");
+    printf("LABEL !skipstr_val\n");
+}
+
+void print_ord(){
+    printf("JUMP !skipord\n");
+    printf("LABEL ord\n");
+    printf("POPS GF@_result\n");
+
+
+    printf("JUMPIFEQ !ord_empty GF@_result string@\n"); //check if string is empty
+    printf("GETCHAR GF@_result GF@_result int@0\n"); //returns first character of string
+    printf("RETURN\n");
+    
+    printf("LABEL !ord_empty\n");
+    printf("MOVE GF@_result int@0\n");
+    printf("RETURN\n");
+
+    printf("LABEL !ord_end\n");
+    printf("LABEL !skipord\n");
+
+
+}
+
+
+void print_substring(){
+    printf("JUMP !skipsubstring\n");
+    printf("LABEL substring\n");
+
+    printf("CREATEFRAME\n");
+
+    printf("DEFVAR TF@%s\n","string");
+    printf("POPS TF@%s\n","string");
+
+
+    printf("DEFVAR TF@%s\n","start");
+    printf("POPS TF@%s\n","start");
+
+    printf("DEFVAR TF@%s\n","end");
+    printf("POPS TF@%s\n","end");
+
+
+    printf("DEFVAR TF@%s\n","counter");
+    printf("SUB TF@counter TF@end TF@start \n ");
+
+
+    //CHECKS
+    // $i < 0
+    printf("LT GF@_tmp TF@start int@0 \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp  int@0\n");
+    // $j < 0
+    printf("LT GF@_tmp TF@end int@0 \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    //$i > $j
+    printf("GT GF@_tmp TF@start TF@end \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    //$i > strlen
+    printf("STRLEN GF@_tmp TF@string\n");
+    printf("GT GF@_tmp TF@start GF@_tmp \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    //$i==strlen
+    printf("STRLEN GF@_tmp TF@string\n");
+    printf("EQ GF@_tmp TF@start GF@_tmp \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    //$j>strelen
+    printf("STRLEN GF@_tmp TF@string\n");
+    printf("GT GF@_tmp TF@end GF@_tmp \n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+
+    /*
+    result = "";
+    do{result=result . string[counter+start];}while(counter!=0);
+    */
+    printf("MOVE GF@_result string@\n");
+
+
+    printf("LABEL !substring_dowhile\n"); //do while
+    printf("SUB TF@counter TF@counter int@1\n");
+    printf("ADD GF@_tmp TF@start TF@counter\n");
+    printf("GETCHAR GF@_tmp TF@string GF@_tmp\n");
+    printf("CONCAT GF@_result GF@_result GF@_tmp\n");
+
+    printf("JUMPIFNEQ !substring_dowhile TF@counter int@0\n"); // counter != 0
+
+    printf("RETURN\n");
+
+    //return null
+    printf("LABEL !substring_return_null\n");
+    printf("MOVE GF@_result nil@nil\n");
+    printf("RETURN\n");
+
+    printf("LABEL !substring_end\n");
+    printf("LABEL !skipsubstring\n");
+
+
+
+}
 
 void code_generator(struct tree_node * node){
 
     print_init_code();
 
-    //TODO: inbuld functions here
 
     //implicit coversion INTtoFLOAT
     print_codefunc_int2float_conversion();
@@ -598,16 +800,12 @@ void code_generator(struct tree_node * node){
     print_EQS_LTS_GTS("GTS");
     print_NLTS_NGTS("NLTS");
     print_NLTS_NGTS("NGTS");
-    //TODO: zbytek
 
-    /*
-    TODO:
-    function floatval(term) : float
-    function intval(term) : int
-    function strval(term) : string
-    function substring(string $𝑠, int $𝑖, int $𝑗) : ?string
-    function ord(string $c) : int //
-    */
+    print_floatval();
+    print_intval();
+    print_strval();
+    print_substring();
+    print_ord();
 
 
     printf("CALL !MAIN\n");
