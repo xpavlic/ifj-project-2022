@@ -9,28 +9,40 @@
 #include <string.h>
 #include <stdio.h>
 
-
-
 enum tree_node_type{
-    BODY,
-    FUNC_DEC,
-    FUNC_CALL,
-    ASSIGN,
-    FIRST_ASSIGN,
-    IF,
-    WHILE,
-    ARGUMENTS,
-    ARGUMENT,
-    EXPRESSION,
-    TYPE,
-    NAME,
-    OPERATOR,
-    T_STRING,
-    T_INT,
-    T_FLOAT,
-    T_NULL,
-    VAR_OPERAND,
-    RETURN,
+    BODY, // null
+    ASSIGN, // null
+    FIRST_ASSIGN, // null
+    IF, // null
+    WHILE, // null
+    ARGUMENTS, // null
+    TYPE, // string
+    NAME, // string
+
+    RETURN, // null
+    FUNC_DEC, // null
+    FUNC_CALL, // null
+
+    OPERATOR, // string
+
+    EXPRESSION, // null
+    //TERMINALS
+    T_STRING, //string
+    T_INT, // string
+    T_FLOAT, // string
+    T_NULL, // null/string
+    VAR_OPERAND, // string
+
+    //PARAMETERS
+    PARAMETERS, // null
+    STR_PARAMETER,// string 
+    NULL_PARAMETER,// string
+    INT_PARAMETER,//string 
+    FLOAT_PARAMETER,// string
+
+    ARGUMENT, //TO DELETE, instead use 'terminal'/VAR_OPERAND
+    
+
 };
 
 
