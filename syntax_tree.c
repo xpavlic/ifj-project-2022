@@ -36,6 +36,7 @@ struct tree_node * init_tree_node(){
 struct tree_node * add_tree_node(struct tree_node *parent_node,int type, const char(* value)){
     parent_node->count++;
     struct tree_node *new_node = init_tree_node();
+    new_node->parent = parent_node;
     add_tn_data(new_node,type,value);
 
     if(parent_node->tail_child == NULL)  {
