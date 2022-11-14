@@ -26,6 +26,13 @@ enum tree_node_type{
     OPERATOR, // string
 
     EXPRESSION, // null
+    //OPERATORS
+    PLUS_OPERATOR,
+    MINUS_OPERATOR,
+    DIVISION_OPERATOR,
+    MULTIPLICATION_OPERATOR,
+    CONCATENATION_OPERATOR,
+
     //TERMINALS
     T_STRING, //string
     T_INT, // string
@@ -39,6 +46,10 @@ enum tree_node_type{
     NULL_PARAMETER,// string
     INT_PARAMETER,//string 
     FLOAT_PARAMETER,// string
+    
+    STR_NULL_PARAMETER,
+    INT_NULL_PARAMETER,
+    FLOAT_NULL_PARAMETER,
 
     ARGUMENT, //TO DELETE, instead use 'terminal'/VAR_OPERAND
     
