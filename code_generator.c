@@ -197,7 +197,7 @@ void print_strlen(struct tree_node * node){
     printf("STRLEN GF@_result GF@_result\n");
 }
 //void ord(struct tree_node * node) is normal function
-void chr(struct tree_node * node){
+void print_chr(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
@@ -224,7 +224,7 @@ void print_callfunc_node(struct tree_node * node){
         print_strlen(node);
     }
     else if(!strcmp(func_name,"chr")){
-        print_reads(node);
+        print_chr(node);
     }
     else{
         print_general_callfunc_node(node);
@@ -340,6 +340,16 @@ void print_operator(char * value){
     else if(!strcmp(value,".")){
         printf("POPS GF@_op2\n");
         printf("POPS GF@_op1\n");
+    //implicit conversion
+        printf("PUSHS GF@_op1\n");
+        printf("CALL strval\n");
+        printf("MOVE GF@_op1 GF@_result \n");
+
+        printf("PUSHS GF@_op2\n");
+        printf("CALL strval\n");
+        printf("MOVE GF@_op2 GF@_result \n");
+
+
         printf("CONCAT GF@_op1 GF@_op1 GF@_op2\n");
         printf("PUSHS GF@_op1\n");
     }
@@ -699,7 +709,7 @@ void print_ord(){
 
 
     printf("JUMPIFEQ !ord_empty GF@_result string@\n"); //check if string is empty
-    printf("GETCHAR GF@_result GF@_result int@0\n"); //returns first character of string
+    printf("STRI2INT GF@_result GF@_result int@0\n"); //returns first character of string
     printf("RETURN\n");
     
     printf("LABEL !ord_empty\n");
@@ -737,25 +747,25 @@ void print_substring(){
     //CHECKS
     // $i < 0
     printf("LT GF@_tmp TF@start int@0 \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp  int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp  bool@false\n");
     // $j < 0
     printf("LT GF@_tmp TF@end int@0 \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp bool@false\n");
     //$i > $j
     printf("GT GF@_tmp TF@start TF@end \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp bool@false\n");
     //$i > strlen
     printf("STRLEN GF@_tmp TF@string\n");
     printf("GT GF@_tmp TF@start GF@_tmp \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp bool@false\n");
     //$i==strlen
     printf("STRLEN GF@_tmp TF@string\n");
     printf("EQ GF@_tmp TF@start GF@_tmp \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp bool@false\n");
     //$j>strelen
     printf("STRLEN GF@_tmp TF@string\n");
     printf("GT GF@_tmp TF@end GF@_tmp \n");
-    printf("JUMPIFNEQ !substring_return_null GF@_tmp int@0\n");
+    printf("JUMPIFNEQ !substring_return_null GF@_tmp bool@false\n");
 
     /*
     result = "";
@@ -768,7 +778,7 @@ void print_substring(){
     printf("SUB TF@counter TF@counter int@1\n");
     printf("ADD GF@_tmp TF@start TF@counter\n");
     printf("GETCHAR GF@_tmp TF@string GF@_tmp\n");
-    printf("CONCAT GF@_result GF@_result GF@_tmp\n");
+    printf("CONCAT GF@_result GF@_tmp GF@_result \n");
 
     printf("JUMPIFNEQ !substring_dowhile TF@counter int@0\n"); // counter != 0
 
