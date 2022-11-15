@@ -51,9 +51,9 @@ enum tree_node_type {
 
     //PARAMETERS
     PARAMETERS, // null
-    STR_PARAMETER,// string 
+    STR_PARAMETER,// string
     NULL_PARAMETER,// string
-    INT_PARAMETER,//string 
+    INT_PARAMETER,//string
     FLOAT_PARAMETER,// string
 
     STR_NULL_PARAMETER,
