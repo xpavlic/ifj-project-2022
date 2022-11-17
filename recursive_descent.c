@@ -21,19 +21,13 @@ int get_token_rec(FILE *input_file, Token_stack *token_stack) {
 }
 
 //TODO ONLY FOR TESTING OF RECURSIVE DESCENT -> WILL BE PERFORMED BY PRECEDENT ANALYSIS
-int analyse_expression(FILE *input_file, Token_stack *token_stack, int first_token_same) {
-    if (first_token_same == 0) {
-        if (get_top(token_stack)->type == state_SEMICOLON) return 0;
-    }
+// HAS TO SEND FIRST TOKEN TO PRECEDENT ANALYSIS STACK
+int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while) {
     while (1) {
+        if (if_while == 1 && get_top(token_stack)->type == state_CLEFTPARENT) return 0;
+        if (if_while == 0 && get_top(token_stack)->type == state_SEMICOLON) return 0;
         if (get_token_rec(input_file, token_stack) != 0) return 1;
-        if (get_top(token_stack)->type == state_SEMICOLON) return 0;
     }
-}
-
-
-int analyse_return(FILE *input_file, Token_stack *token_stack) {
-    return analyse_expression(input_file, token_stack, 1);
 }
 
 
@@ -68,7 +62,6 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack) {
         if (get_top(token_stack)->type != state_SEMICOLON) return 2;
         return 0;
     }
-    //has to parse same token as in this function => analyse_expression first_token_same = 0
     return analyse_expression(input_file, token_stack, 0); //stops on ;
 }
 
@@ -136,10 +129,8 @@ int analyse_body(FILE *input_file, Token_stack *token_stack) {
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
-            result = analyse_expression(input_file, token_stack, 1); //stops on )
+            result = analyse_expression(input_file, token_stack, 1); //stops on {
             if (result != 0) return result;
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_CLEFTPARENT) return 2;
             result = analyse_body(input_file, token_stack); //stops on }
             if (result != 0) return result;
             if (get_token_rec(input_file, token_stack) != 0) return 1;
@@ -154,7 +145,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack) {
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
-            result = analyse_expression(input_file, token_stack, 1); // stops on )
+            result = analyse_expression(input_file, token_stack, 1); // stops on {
             if (result != 0) return result;
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_CLEFTPARENT) return 2;
@@ -165,8 +156,11 @@ int analyse_body(FILE *input_file, Token_stack *token_stack) {
 
         //return
         if (strcmp(get_top(token_stack)->val.str, "return") == 0) {
-            result = analyse_return(input_file, token_stack); // stops on ;
-            if (result != 0) return result;
+            if (get_token_rec(input_file, token_stack) != 0) return 1;
+            if (get_top(token_stack)->type != state_SEMICOLON) {
+                result = analyse_expression(input_file, token_stack, 0); // stops on ;
+                if (result != 0) return result;
+            }
             continue;
         }
 
@@ -224,10 +218,8 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack) {
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
-            result = analyse_expression(input_file, token_stack, 1); //stops on )
+            result = analyse_expression(input_file, token_stack, 1); //stops on {
             if (result != 0) return result;
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_CLEFTPARENT) return 2;
             result = analyse_body(input_file, token_stack); //stops on }
             if (result != 0) return result;
             if (get_token_rec(input_file, token_stack) != 0) return 1;
@@ -242,10 +234,8 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack) {
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
-            result = analyse_expression(input_file, token_stack, 1); // stops on )
+            result = analyse_expression(input_file, token_stack, 1); // stops on {
             if (result != 0) return result;
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_CLEFTPARENT) return 2;
             result = analyse_body(input_file, token_stack); //stops on }
             if (result != 0) return result;
             continue;
@@ -253,8 +243,11 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack) {
 
         //return
         if (strcmp(get_top(token_stack)->val.str, "return") == 0) {
-            result = analyse_return(input_file, token_stack); // stops on ;
-            if (result != 0) return result;
+            if (get_token_rec(input_file, token_stack) != 0) return 1;
+            if (get_top(token_stack)->type != state_SEMICOLON) {
+                result = analyse_expression(input_file, token_stack, 0); // stops on ;
+                if (result != 0) return result;
+            }
             continue;
         }
 
