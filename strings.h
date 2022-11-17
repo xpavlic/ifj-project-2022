@@ -27,7 +27,7 @@ void free_str(dyn_str *string);
  * @brief Adds char to the end of the string
  * @param string dynamic string
  * @param letter character
- * @return void
+ * @return 0 if success, else 1
  */
 int add_char(dyn_str *string, char letter);
 
