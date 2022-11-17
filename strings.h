@@ -29,7 +29,7 @@ void free_str(dyn_str *string);
  * @param letter character
  * @return void
  */
-void add_char(dyn_str *string, char letter);
+int add_char(dyn_str *string, char letter);
 
 /**
  * @brief Deletes last character in string
