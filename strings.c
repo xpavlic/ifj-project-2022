@@ -3,9 +3,6 @@
 const size_t dyn_str_init_size = 16;
 
 int init_str(dyn_str *str) {
-    if (!str->str) {
-        return 1;
-    }
 
     str->str = (char *)malloc(dyn_str_init_size * sizeof(char));
 
@@ -51,7 +48,8 @@ void add_char(dyn_str *str, char c) {
 int del_last(dyn_str *str) {
     if(str->length == 0)
         return 1;
-    
+
+    str->length--;
     str->str[str->length] = '\0';
     str->length--;
     return 0;
