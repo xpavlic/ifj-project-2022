@@ -140,6 +140,7 @@ int get_token(FILE *file, Token *tk) {
                 {
                     add_char(&tk->val, c);
                     tk->type = state_NOTEQUAL;
+                    return 0;
                 } else {
                     return 1;
                 }
