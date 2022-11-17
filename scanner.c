@@ -51,8 +51,7 @@ int get_token(FILE *file, Token *tk) {
                     state = state_EXCLAMATION;
                 } else if (c == '>') {
                     add_char(&tk->val, c);
-                    tk->type = state_MORETHAN;
-                    return 0;
+                    state = state_MORETHAN;
                 } else if (c == '<') {
                     add_char(&tk->val, c);
                     state = state_LESSTHAN;
@@ -115,7 +114,10 @@ int get_token(FILE *file, Token *tk) {
                 if (c == '?') {
                     add_char(&tk->val, '?');
                     state = state_PROLOG;
-
+                } else if( c == '=') {
+                    add_char(&tk->val, c);
+                    tk->type = state_LESSEQUAL;
+                    return 0;
                 } else {
                     ungetc(c, file);
                     tk->type = state_LESSTHAN;
@@ -123,6 +125,26 @@ int get_token(FILE *file, Token *tk) {
                 }
                 break;
 
+            case state_EXCLAMATION:                
+                if( c == '=')
+                {
+                    tk->type = state_NOTEQUAL;
+                    state = state_EQUAL;
+                } else {
+                    return 0;
+                }
+                break;
+            case state_MORETHAN:
+                if( c == '=')
+                {
+                    add_char(&tk->val, c);
+                    tk->type = state_MOREEQUAL;
+                    return 0;
+                } else {
+                    ungetc(c, file);
+                    tk->type = state_MORETHAN;
+                    return 0;
+                }
             case state_PROLOG:
                 if (islower(c) != 0) {
                     add_char(&tk->val, c);
@@ -414,8 +436,6 @@ int get_token(FILE *file, Token *tk) {
             case state_PLUS:
             case state_MINUS:
             case state_TIMES:
-            case state_EXCLAMATION:
-            case state_MORETHAN:
             case state_LEFTPARENT:
             case state_RIGHTPARENT:
             case state_CLEFTPARENT:
@@ -424,6 +444,9 @@ int get_token(FILE *file, Token *tk) {
             case state_COMMA:
             case state_COLON:
             case state_SEMICOLON:
+            case state_LESSEQUAL:
+            case state_MOREEQUAL:
+            case state_NOTEQUAL:
                 return 0;
         }
     }

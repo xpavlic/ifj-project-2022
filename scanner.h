@@ -56,9 +56,12 @@ typedef enum {
     state_TIMES, //END
     state_EQUAL, //NONEND
     state_OPEQUAL,
+    state_NOTEQUAL,
 
-    state_EXCLAMATION, //NONEND
+    state_EXCLAMATION, //POSSIBLE
     state_MORETHAN, //END
+    state_MOREEQUAL,
+    state_LESSEQUAL,
     state_LESSTHAN, //END
 
     state_LEFTPARENT, //END
