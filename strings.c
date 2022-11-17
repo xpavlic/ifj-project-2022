@@ -22,23 +22,15 @@ void free_str(dyn_str *str) {
     str->size = 0;
 }
 
-int realloc_str(dyn_str *str) {
-
-    str->str = (char *)realloc(str->str, 12);
-    if(!str->str) {
-        return 1;
-    } else {
-        str->size += 24;
-        return 0;
-    }
-
-}
-
 void add_char(dyn_str *str, char c) {
 
-    if (str->length + 1 >= str->size) {
-        
-        realloc_str(str);
+    if (str->length >= str->size) {
+
+        str->size *= 2;
+        str->str = (char *)realloc(str->str, str->size);
+        if(!str->str)
+            return 1;
+    
     }
     str->str[str->length] = c;
     str->length++;
