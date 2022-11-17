@@ -128,12 +128,21 @@ int get_token(FILE *file, Token *tk) {
             case state_EXCLAMATION:                
                 if( c == '=')
                 {
-                    tk->type = state_NOTEQUAL;
-                    state = state_EQUAL;
+                    add_char(&tk->val, c);
+                    state = state_NOTEQUAL;
                 } else {
-                    return 0;
+                    return 1;
                 }
                 break;
+
+            case state_NOTEQUAL:
+                if( c == '=')
+                {
+                    add_char(&tk->val, c);
+                    tk->type = state_NOTEQUAL;
+                } else {
+                    return 1;
+                }
             case state_MORETHAN:
                 if( c == '=')
                 {
@@ -446,7 +455,6 @@ int get_token(FILE *file, Token *tk) {
             case state_SEMICOLON:
             case state_LESSEQUAL:
             case state_MOREEQUAL:
-            case state_NOTEQUAL:
                 return 0;
         }
     }
