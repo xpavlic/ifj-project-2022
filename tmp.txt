@@ -1,0 +1,6 @@
+Root je : function_call
+Prvni syn : write
+Druhy syn : function_args
+Root je : assign
+Prvni syn : $a
+Druhy syn : function_call
