@@ -56,3 +56,8 @@ dkms.conf
 
 # Cmake
 /build
+
+#ast
+ast.c
+ast.h
+test.txt
