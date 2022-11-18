@@ -22,7 +22,7 @@ int get_token_rec(FILE *input_file, Token_stack *token_stack) {
 
 //TODO ONLY FOR TESTING OF RECURSIVE DESCENT -> WILL BE PERFORMED BY PRECEDENT ANALYSIS
 // HAS TO SEND FIRST TOKEN TO PRECEDENT ANALYSIS STACK
-int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while) {
+int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while/*, struct tree_node * tree */) {
     while (1) {
         if (if_while == 1 && get_top(token_stack)->type == state_CLEFTPARENT) return 0;
         if (if_while == 0 && get_top(token_stack)->type == state_SEMICOLON) return 0;
@@ -37,17 +37,23 @@ int analyse_arg(FILE *input_file, Token_stack *token_stack, struct tree_node * t
         return 0;
     }
     while (1) {
-        if (get_top(token_stack)->type == state_VARIABLE || get_top(token_stack)->type == state_INT ||
-            get_top(token_stack)->type == state_STRING ||
-            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0) { //jednotlivé argumenty
+        if ( get_top(token_stack)->type == state_VARIABLE ) {
             tree->tail_child = add_tree_node( tree, VAR_OPERAND, get_top(token_stack)->val.str);
+        } else if (get_top(token_stack)->type == state_INT) {
+            tree->tail_child = add_tree_node( tree, T_INT, get_top(token_stack)->val.str);
+        } else if (get_top(token_stack)->type == state_STRING) {
+            tree->tail_child = add_tree_node( tree, T_STRING, get_top(token_stack)->val.str);
+        } else if (get_top(token_stack)->type == state_FLOAT) {
+            tree->tail_child = add_tree_node( tree, T_FLOAT, get_top(token_stack)->val.str);
+        } else if (strcmp(get_top(token_stack)->val.str, "null") == 0) {
+            tree->tail_child = add_tree_node( tree, T_NULL, get_top(token_stack)->val.str);
+        } else return 2;
+        if (get_token_rec(input_file, token_stack) != 0) return 1;
+        if (get_top(token_stack)->type == state_COMMA) {
             if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type == state_COMMA) {
-                if (get_token_rec(input_file, token_stack) != 0) return 1;
-                continue;
-            } else if (get_top(token_stack)->type == state_RIGHTPARENT) {
-                return 0;
-            } else return 2;
+            continue;
+        } else if (get_top(token_stack)->type == state_RIGHTPARENT) {
+            return 0;
         } else return 2;
     }
 }
@@ -56,16 +62,17 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
     if (get_token_rec(input_file, token_stack) != 0) return 1;
     if (get_top(token_stack)->type == state_IDENTIFIER) { 
         tree->tail_child = add_tree_node(tree, FUNC_CALL, "function_call");
+        tree->tail_child = add_tree_node( tree, NAME, get_top(token_stack)->val.str);
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
         tree->tail_child->tail_child = add_tree_node( tree->tail_child, ARGUMENTS, "function_args");
-        int result = analyse_arg(input_file, token_stack, tree->tail_child); //stops on )
+        int result = analyse_arg(input_file, token_stack, tree->tail_child->tail_child); //stops on )
         if (result != 0) return result;
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         if (get_top(token_stack)->type != state_SEMICOLON) return 2;
         return 0;
     }
-    return analyse_expression(input_file, token_stack, 0); //stops on ;
+    return analyse_expression(input_file, token_stack, 0 /*, tree->tail_child*/); //stops on ;
 }
 
 
@@ -94,10 +101,10 @@ int analyse_param(FILE *input_file, Token_stack *token_stack, struct tree_node *
             if(!strcmp( get_top(token_stack)->val.str, "float")) {
                 param_type = FLOAT_PARAMETER;
             }
-            if(!strcmp( get_top(token_stack)->val.str, "float")) {
+            if(!strcmp( get_top(token_stack)->val.str, "int")) {
                 param_type = INT_PARAMETER;
             }
-            if(!strcmp( get_top(token_stack)->val.str, "float")) {
+            if(!strcmp( get_top(token_stack)->val.str, "string")) {
                 param_type = STR_PARAMETER;
             }
             if (get_token_rec(input_file, token_stack) != 0) return 1;
@@ -146,13 +153,14 @@ int analyse_body(FILE *input_file, Token_stack *token_stack,struct tree_node *tr
 
         //if
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
-            tree->tail_child = add_tree_node(tree, IF, "if"); //IF v mainu
+            tree->tail_child = add_tree_node(tree, IF, "IF");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
             result = analyse_expression(input_file, token_stack, 1); //stops on {
             if (result != 0) return result;
-            result = analyse_body(input_file, token_stack, tree->tail_child); //stops on }
+            tree->tail_child->tail_child = add_tree_node( tree->tail_child, BODY, "IF_BODY");
+            result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
             if (result != 0) return result;
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (strcmp(get_top(token_stack)->val.str, "else") != 0) return 2;
@@ -181,7 +189,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack,struct tree_node *tr
 
         //return
         if (strcmp(get_top(token_stack)->val.str, "return") == 0) {
-            tree->tail_child = add_tree_node(tree, RETURN, "main_return");
+            tree->tail_child = add_tree_node(tree, RETURN, "return");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_SEMICOLON) {
                 tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
@@ -202,24 +210,23 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
     while (1) {
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         //function
-        if (strcmp(get_top(token_stack)->val.str, "function") == 0) {//tree->tailchild je root funkce
+        if (strcmp(get_top(token_stack)->val.str, "function") == 0) {
             tree->tail_child = add_tree_node(tree, FUNC_DEC, "function_declaration");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_IDENTIFIER) return 2;
             tree->tail_child->tail_child = add_tree_node( tree->tail_child, NAME, get_top(token_stack)->val.str); //nazev funkce
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type == state_LEFTPARENT) {
-                tree->tail_child->tail_child = add_tree_node( tree->tail_child, PARAMETERS, "function_arguments"); //zapis argumentu funkce
+                tree->tail_child->tail_child = add_tree_node( tree->tail_child, PARAMETERS, "function_params"); //zapis argumentu funkce
                 result = analyse_param(input_file, token_stack, tree->tail_child->tail_child);
                 if (result != 0) return result;
             } else return 2;
-                                                   //return type
             result = analyse_return_type(input_file, token_stack, tree->tail_child); //stops on {
             if (result != 0) {
                 return result;
-            } //tady potom implementace do body
+            }
             tree->tail_child->tail_child = add_tree_node( tree->tail_child, BODY, "function_body");
-            result = analyse_body(input_file, token_stack, tree->tail_child); //stops on }
+            result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
             if (result != 0) {
                 return result;
             }
@@ -252,14 +259,14 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
 
         //if
         if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
-            tree->tail_child = add_tree_node(tree, IF, "if"); //IF v mainu
+            tree->tail_child = add_tree_node(tree, IF, "IF");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
             result = analyse_expression(input_file, token_stack, 1); //stops on {
             if (result != 0) return result;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "IF_body");
-            result = analyse_body(input_file, token_stack, tree->tail_child); //stops on }
+            result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
             if (result != 0) return result;
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (strcmp(get_top(token_stack)->val.str, "else") != 0) return 2;
@@ -290,7 +297,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             tree->tail_child = add_tree_node(tree, RETURN, "main_return");
             if (get_top(token_stack)->type != state_SEMICOLON) {
                 tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-                result = analyse_expression(input_file, token_stack, 0); // stops on ;
+                result = analyse_expression(input_file, token_stack, 0 /*, tree->tail_child->tail_child*/); // stops on ;
                 if (result != 0) return result;
             }
             continue;
