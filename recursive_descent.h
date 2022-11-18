@@ -12,9 +12,7 @@
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 
-int analyse_expression(FILE *input_file, Token_stack *token_stack, int first_token_same);
-
-int analyse_return(FILE *input_file, Token_stack *token_stack);
+int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while);
 
 int analyse_arg(FILE *input_file, Token_stack *token_stack, struct tree_node * arg_body);
 
