@@ -60,7 +60,7 @@ void print_expression_node(struct tree_node * node);
 void pushs_arguments(struct tree_node * node);
 void print_operation_node(struct tree_node * node);
 void postorder(struct tree_node * node);
-void print_operator(char * value);
+void print_operator(int type);
 
 void print_first_assign_node(struct tree_node * node);
 void print_return_node(struct tree_node * node);
@@ -144,7 +144,7 @@ void print_body_node(struct tree_node * body){
 
 void print_decfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;
-    printf("JUMP !S%s\n",func_name);
+    printf("JUMP !customSkip%s\n",func_name);
      
     //label samotne funkce
     printf("LABEL %s\n",func_name);
@@ -155,7 +155,7 @@ void print_decfunc_node(struct tree_node * node){
 
     //for each argument do pop do promenne se jmenem argumentu
     
-    for(struct tree_node * argument = find_child_node(node, ARGUMENTS)->head_child;argument!=NULL;argument=argument->next_sibling){
+    for(struct tree_node * argument = find_child_node(node, PARAMETERS)->head_child;argument!=NULL;argument=argument->next_sibling){
         printf("DEFVAR LF@%s\n",argument->data->value);
         printf("POPS LF@%s\n",argument->data->value);
     }
@@ -168,7 +168,7 @@ void print_decfunc_node(struct tree_node * node){
     printf("POPFRAME\n");
     printf("RETURN\n");
 
-    printf("LABEL !S%s\n",func_name);
+    printf("LABEL !customSkip%s\n",func_name);
 }
 
 
@@ -312,20 +312,20 @@ void postorder(struct tree_node * node){
     }
 }
 
-void print_operator(char * value){
-    if(!strcmp(value,"+")){
+void print_operator(int type){
+    if(type == PLUS_OPERATOR){
         printf("CALL !int_to_float\n");
         printf("ADDS\n");
     }
-    else if(!strcmp(value,"-")){
+    else if(type == MINUS_OPERATOR){
         printf("CALL !int_to_float\n");
         printf("SUBS\n");
     }
-    else if(!strcmp(value,"*")){
+    else if(type == MULTIPLICATION_OPERATOR){
         printf("CALL !int_to_float\n");
         printf("MULS\n");
     }
-    else if(!strcmp(value,"/")){
+    else if(type == DIVISION_OPERATOR){
         // both operands to float
         printf("CALL !int_to_float\n");
         printf("CALL floatval\n");
@@ -337,7 +337,7 @@ void print_operator(char * value){
 
         printf("DIVS\n");
     }
-    else if(!strcmp(value,".")){
+    else if(type == CONCATENATION_OPERATOR){
         printf("POPS GF@_op2\n");
         printf("POPS GF@_op1\n");
     //implicit conversion
@@ -353,34 +353,30 @@ void print_operator(char * value){
         printf("CONCAT GF@_op1 GF@_op1 GF@_op2\n");
         printf("PUSHS GF@_op1\n");
     }
-    else if(!strcmp(value,">")){
+    else if(type == BIGGER_OPERATOR){
         printf("CALL !GTS\n");
     }
-    else if(!strcmp(value,"<")){
+    else if(type == SMALLER_OPERATOR){
         printf("CALL !LTS\n");
     }
-    else if(!strcmp(value,"<==")){
+    else if(type == SMALLER_EQUAL_OPERATOR){
         printf("CALL !NGTS\n");
     }
-    else if(!strcmp(value,">==")){
+    else if(type == BIGGER_EQUAL_OPERATOR){
         printf("CALL !NLTS\n");
     }
-    else if(!strcmp(value,"!==")){
+    else if(type == NOT_EQUAL_OPERATOR){
         printf("CALL !EQS\n");
         printf("NOTS\n");
     }
-    else if(!strcmp(value,"===")){
+    else if(type == EQUAL_OPERATOR){
         printf("CALL !EQS\n");
     }
 }
 
 void choose_expr_print(struct tree_node * node){
-    //operator
-    if(node->data->type == OPERATOR){
-        print_operator(node->data->value);
-    }
     //operand but variable
-    else if(node->data->type == VAR_OPERAND){
+    if(node->data->type == VAR_OPERAND){
         //print push variable
         printf("PUSHS LF@%s\n",node->data->value);
     }
@@ -401,9 +397,14 @@ void choose_expr_print(struct tree_node * node){
         print_string_for_expression(node->data->value);
     }
     //null
-    else{ 
+    else if(node->data->type == T_NULL){ 
         printf("PUSHS nil@nil\n");
     }
+    //operator
+    else{
+        print_operator(node->data->type);
+    }
+
 }
 
 void print_string_for_expression(char * string){
@@ -423,6 +424,9 @@ void print_string_for_expression(char * string){
 
 void print_expression_node(struct tree_node * node){
     //if function has return without value
+    if(node->data->type == EXPRESSION) {
+        node = node->head_child;
+    };
     if(node == NULL){
         printf("MOVE GF@_result nil@nil\n");
         return;
