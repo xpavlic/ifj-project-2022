@@ -200,8 +200,6 @@ int analyse_body(FILE *input_file, Token_stack *token_stack,struct tree_node *tr
 int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *tree) {
     int result;
     while (1) {
-            ast_test( tree );
-
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         //function
         if (strcmp(get_top(token_stack)->val.str, "function") == 0) {//tree->tailchild je root funkce

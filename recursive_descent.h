@@ -8,7 +8,6 @@
 #include "token_stack.h"
 #include "scanner.h"
 #include "syntax_tree.h"
-#include "ast.h"
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 
