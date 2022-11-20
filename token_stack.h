@@ -28,7 +28,7 @@ Token *get_top(Token_stack *stack);
 
 int is_empty(Token_stack *stack);
 
-int push_token(Token_stack *stack, Token token);
+int push_token(Token_stack *stack, Token *token);
 
 int remove_last_token(Token_stack *stack);
 

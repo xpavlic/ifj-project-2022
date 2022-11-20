@@ -17,8 +17,13 @@ enum precedent_types {
     PRIO_MUL, // * /
     PRIO_PLUS, // + - .
     PRIO_BIGGER, // < <= > >=
-    PRIO_EQUAL // === !===
+    PRIO_EQUAL, // === !===
+    EXP_ERROR,
+    SPEC_NON_TERMINAL,
+    EXP_EMPTY
 };
+
+int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *expression_root, int if_while);
 
 
 #endif //IFJ_PROJECT_PRECEDENT_H
