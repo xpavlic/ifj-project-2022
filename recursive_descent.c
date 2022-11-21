@@ -102,6 +102,15 @@ int analyse_param(FILE *input_file, Token_stack *token_stack, struct tree_node *
             if (!strcmp(get_top(token_stack)->val.str, "string")) {
                 param_type = STR_PARAMETER;
             }
+            if (!strcmp(get_top(token_stack)->val.str, "?float")) {
+                param_type = FLOAT_NULL_PARAMETER;
+            }
+            if (!strcmp(get_top(token_stack)->val.str, "?int")) {
+                param_type = INT_NULL_PARAMETER;
+            }
+            if (!strcmp(get_top(token_stack)->val.str, "?string")) {
+                param_type = STR_NULL_PARAMETER;
+            }
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type == state_VARIABLE) {
                 tree->tail_child = add_tree_node(tree, param_type, get_top(token_stack)->val.str);
