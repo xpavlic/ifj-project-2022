@@ -86,9 +86,8 @@ int check_type(int type_left_child, int type_right_child, int operator) {
             error_handler(TYPE_COMPATIBILITY_ERROR);
             break;
         case EQUAL_OPERATOR:
+            break;
         case NOT_EQUAL_OPERATOR:
-            if (type_left_child == type_right_child) return type_left_child;
-            error_handler(TYPE_COMPATIBILITY_ERROR);
             break;
         case SMALLER_EQUAL_OPERATOR:
         case BIGGER_EQUAL_OPERATOR:
@@ -186,11 +185,19 @@ void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
         /* Vytvornie noveho ramcu */
         symtable_add_frame(symtable_stack);
         traversal_second(fnc_symtable, symtable_stack, node->tail_child);
-    } else if (node->data->type == IF)
+    } else if (node->data->type == IF) {
+        traversal_type_propagation(node->head_child, symtable_stack,
+                                   fnc_symtable);
+        for (struct tree_node *tmp = node->head_child->next_sibling;
+             tmp != NULL; tmp = tmp->next_sibling) {
+            traversal_second(fnc_symtable, symtable_stack, node->tail_child);
+        }
+    } else if (node->data->type == WHILE) {
         symtable_add_frame(symtable_stack);
-    else if (node->data->type == WHILE)
-        symtable_add_frame(symtable_stack);
-    else if (node->data->type == BODY) {
+        traversal_type_propagation(node->head_child, symtable_stack,
+                                   fnc_symtable);
+        traversal_second(fnc_symtable, symtable_stack, node->tail_child);
+    } else if (node->data->type == BODY) {
         for (struct tree_node *tmp = node; tmp != NULL;
              tmp = tmp->next_sibling) {
             traversal_second(fnc_symtable, symtable_stack, tmp);
@@ -200,6 +207,10 @@ void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
             symtable_add(symtable_stack, node->tail_child->data->value);
         ((value_t *)new_pair->value)->arg_var_type = traversal_type_propagation(
             node->tail_child, symtable_stack, fnc_symtable);
+        for (struct tree_node *tmp = node->head_child; tmp != NULL;
+             tmp = tmp->next_sibling) {
+            traversal_second(fnc_symtable, symtable_stack, node->tail_child);
+        }
     } else if (node->data->type == ASSIGN) {
         htab_pair_t *pair =
             symtable_find(symtable_stack, node->head_child->data->value);
@@ -207,6 +218,16 @@ void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
         if (pair == NULL) {
             node->data->type = FIRST_ASSIGN;
             traversal_second(fnc_symtable, symtable_stack, node);
+        } else {
+            /* Pridaneie aktualneho typu podla pravej strany */
+            ((value_t *)pair->value)->arg_var_type = traversal_type_propagation(
+                node->tail_child, symtable_stack, fnc_symtable);
+        }
+    } else if (node->data->type == FIRST_ASSIGN) {
+        htab_pair_t *pair =
+            symtable_add(symtable_stack, node->head_child->data->value);
+        if (pair == NULL) {
+            error_handler(INTERNAL_ERROR);
         }
         /* Pridaneie aktualneho typu podla pravej strany */
         ((value_t *)pair->value)->arg_var_type = traversal_type_propagation(
@@ -216,21 +237,25 @@ void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
 void add_builtin_functions(symtable_t *symtable_stack) {
     /* reads */
     htab_pair_t *reads = symtable_add(symtable_stack, "reads");
+    if (reads == NULL) error_handler(INTERNAL_ERROR);
     reads->value = value_init();
     ((value_t *)reads->value)->number_of_parameters = 0;
     ((value_t *)reads->value)->return_type = STR_NULL_PARAMETER;
     /* readi */
     htab_pair_t *readi = symtable_add(symtable_stack, "readi");
+    if (readi == NULL) error_handler(INTERNAL_ERROR);
     readi->value = value_init();
     ((value_t *)readi->value)->number_of_parameters = 0;
     ((value_t *)readi->value)->return_type = INT_NULL_PARAMETER;
     /* readf */
     htab_pair_t *readf = symtable_add(symtable_stack, "readf");
+    if (readf == NULL) error_handler(INTERNAL_ERROR);
     readf->value = value_init();
     ((value_t *)readf->value)->number_of_parameters = 0;
     ((value_t *)readf->value)->return_type = FLOAT_NULL_PARAMETER;
     /* write */
     htab_pair_t *write = symtable_add(symtable_stack, "readf");
+    if (write == NULL) error_handler(INTERNAL_ERROR);
     write->value = value_init();
     ((value_t *)write->value)->number_of_parameters = 0;
 }
@@ -243,6 +268,9 @@ void add_builtin_functions(symtable_t *symtable_stack) {
 void semantic_analysis(struct tree_node *node) {
     symtable_t *function_symbol_table = symtable_init(&value_t_free);
     if (function_symbol_table == NULL) error_handler(INTERNAL_ERROR);
+    symtable_t *symbol_table_stack = symtable_init(&value_t_free);
+    if (symbol_table_stack == NULL) error_handler(INTERNAL_ERROR);
+
     symtable_add_frame(function_symbol_table);
     /* spracovanie deklaracii funckii v BODY node  */
     for (struct tree_node *tmp = node->head_child; tmp != NULL;
@@ -264,16 +292,15 @@ void semantic_analysis(struct tree_node *node) {
                         node->head_child->data->type;
                 }
             }
-            symtable_t *symbol_table_stack = symtable_init(&value_t_free);
-            if (function_symbol_table == NULL) error_handler(INTERNAL_ERROR);
-            symtable_add_frame(symbol_table_stack);
-            for (struct tree_node *tmp2 = node->head_child; tmp2 != NULL;
-                 tmp2 = tmp2->next_sibling) {
-                traversal_second(function_symbol_table, symbol_table_stack,
-                                 node);
-            }
         }
     }
+    symtable_add_frame(symbol_table_stack);
+    for (struct tree_node *tmp2 = node->head_child; tmp2 != NULL;
+         tmp2 = tmp2->next_sibling) {
+        traversal_second(function_symbol_table, symbol_table_stack, node);
+    }
+    symtable_free(function_symbol_table);
+    symtable_free(symbol_table_stack);
 }
 
 /**
@@ -285,9 +312,15 @@ void error_handler(int error) {
         case REDECLARATION_UNDECLARED:
             fprintf(stderr, "Redeclaration/undeclared function");
             exit(REDECLARATION_UNDECLARED);
+        case WRONG_ARGUMENT_RETURN:
+            fprintf(stderr, "Wrong argument type or return type");
+            exit(REDECLARATION_UNDECLARED);
         case UNDEFINED_VAR:
             fprintf(stderr, "Undefined variable");
             exit(UNDEFINED_VAR);
+        case TYPE_COMPATIBILITY_ERROR:
+            fprintf(stderr, "Type compatibility error in expression");
+            exit(REDECLARATION_UNDECLARED);
         case INTERNAL_ERROR:
             fprintf(stderr, "Internal error");
             exit(INTERNAL_ERROR);
