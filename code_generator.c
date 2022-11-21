@@ -77,7 +77,7 @@ void print_string_for_expression(char * string);
 struct tree_node * find_child_node(struct tree_node * node, int type){
     if(node == NULL) return NULL;
     for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
-        if(child_node->data->type == type){
+        if((int)child_node->data->type == type){
             return child_node;
         }
     }
