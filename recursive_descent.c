@@ -167,7 +167,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             continue;
         }
         //while
-        if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
+        if (strcmp(get_top(token_stack)->val.str, "while") == 0) {
             tree->tail_child = add_tree_node(tree, WHILE, "while");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
@@ -275,7 +275,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             continue;
         }
         //while
-        if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
+        if (strcmp(get_top(token_stack)->val.str, "while") == 0) {
             tree->tail_child = add_tree_node(tree, WHILE, "while");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
