@@ -10,7 +10,7 @@
 #define INTERNAL_ERROR 99
 
 value_t *value_init();
-void value_t_free(value_t *toBeDeleted);
+void value_t_free(void *toBeDeleted);
 
 int check_type(int type_left_child, int type_right_child, int operator);
 
