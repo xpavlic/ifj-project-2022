@@ -265,7 +265,7 @@ void add_builtin_functions(symtable_t *symtable_stack) {
  *
  * @param node BODY node of a program
  */
-void semantic_analysis(struct tree_node *node) {
+int semantic_analysis(struct tree_node *node) {
     symtable_t *function_symbol_table = symtable_init(&value_t_free);
     if (function_symbol_table == NULL) error_handler(INTERNAL_ERROR);
     symtable_t *symbol_table_stack = symtable_init(&value_t_free);
@@ -301,6 +301,7 @@ void semantic_analysis(struct tree_node *node) {
     }
     symtable_free(function_symbol_table);
     symtable_free(symbol_table_stack);
+    return 0;
 }
 
 /**

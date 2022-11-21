@@ -26,6 +26,6 @@ void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
 
 void add_builtin_functions(symtable_t *symtable_stack);
 
-void semantic_analysis(struct tree_node *node);
+int semantic_analysis(struct tree_node *node);
 
 void error_handler(int error);
