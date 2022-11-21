@@ -58,7 +58,7 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
     if (get_token_rec(input_file, token_stack) != 0) return 1;
     if (get_top(token_stack)->type == state_IDENTIFIER) {
         tree->tail_child = add_tree_node(tree, FUNC_CALL, "function_call");
-        tree->tail_child = add_tree_node(tree, NAME, get_top(token_stack)->val.str);
+        tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
         tree->tail_child->tail_child = add_tree_node(tree->tail_child, ARGUMENTS, "function_args");
@@ -68,8 +68,8 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
         if (get_top(token_stack)->type != state_SEMICOLON) return 2;
         return 0;
     }
-    tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-    return analyse_expression(input_file, token_stack, 0, tree->tail_child->tail_child); //stops on ;
+    add_tree_node(tree, EXPRESSION, "expression");
+    return analyse_expression(input_file, token_stack, 0, tree->tail_child); //stops on ;
 }
 
 
@@ -148,15 +148,17 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
 
         //variable assign
         if (get_top(token_stack)->type == state_VARIABLE) {
+            char variable_name[strlen(get_top(token_stack)->val.str) + 1];
+            strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_EQUAL) {
                 result = analyse_expression(input_file, token_stack, 0, NULL);
                 if (result != 0) return result;
                 continue;
             }
-            tree->tail_child = add_tree_node(tree, ASSIGN, "assign");
-            tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
-            result = analyse_assign(input_file, token_stack, tree->tail_child); //stops on ;
+            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            add_tree_node(assign_node, NAME, variable_name);
+            result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
             continue;
         }
@@ -270,15 +272,17 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
 
         //variable assign
         if (get_top(token_stack)->type == state_VARIABLE) {
+            char variable_name[strlen(get_top(token_stack)->val.str) + 1];
+            strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_EQUAL) {
                 result = analyse_expression(input_file, token_stack, 0, NULL);
                 if (result != 0) return result;
                 continue;
             }
-            tree->tail_child = add_tree_node(tree, ASSIGN, "assign");
-            tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
-            result = analyse_assign(input_file, token_stack, tree->tail_child); //stops on ;
+            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            add_tree_node(assign_node, NAME, variable_name);
+            result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
             continue;
         }
@@ -404,12 +408,11 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    /*
     printf("AST\n");
     printf("root: ");
     print_tree(tree, 0);
     printf("syntax result: %i\n", result);
-    if (result == 0) {
+    /*if (result == 0) {
         result = semantic_analysis(tree);
         printf("AFTER SEMANTIC TREE\n");
         printf("root: ");
