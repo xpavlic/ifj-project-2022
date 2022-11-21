@@ -392,7 +392,7 @@ void print_tree(struct tree_node *root, int level) {
     for (int i = 0; i < level; i++)
         printf(i == level - 1 ? "|" : "  ");
     printf("%s\n", root->data->value);
-    struct tree_node *child = root->head_child;
+    struct tree_node* child = root->head_child;
     while (child != NULL) {
         print_tree(child, level + 1);
         child = child->next_sibling;
@@ -411,22 +411,15 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    printf("AST\n");
-    printf("root: ");
-    print_tree(tree, 0);
-    printf("syntax result: %i\n", result);
-    /*if (result == 0) {
-        result = semantic_analysis(tree);
-        printf("AFTER SEMANTIC TREE\n");
-        printf("root: ");
-        print_tree(tree, 0);
+    if (result == 0) {
+        //result = call semantic
     }
 
     if (result == 0) {
         //call generator
     }
 
-    printf("%s\n", tree->data->value);
+    /*printf("%s\n", tree->data->value);
     printf("%s\n", tree->head_child->data->value);*/
 
     // printf("TOKENSSTACK:\n ");
