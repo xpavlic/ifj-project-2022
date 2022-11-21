@@ -9,6 +9,7 @@
 #include "scanner.h"
 #include "syntax_tree.h"
 #include "precedent.h"
+#include "semantic.h"
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 

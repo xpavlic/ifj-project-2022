@@ -411,8 +411,15 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
+    printf("AST\n");
+    printf("root: ");
+    print_tree(tree, 0);
+    printf("result: %i\n", result);
     if (result == 0) {
-        //result = call semantic
+        result = semantic_analysis(tree);
+        printf("AFTER SEMANTIC TREE\n");
+        printf("root: ");
+        print_tree(tree, 0);
     }
 
     if (result == 0) {
