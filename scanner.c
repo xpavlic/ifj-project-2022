@@ -158,7 +158,6 @@ int get_token(FILE *file, Token *tk) {
             case state_PROLOG:
                 if (islower(c) != 0) {
                     add_char(&tk->val, c);
-
                 } else {
                     ungetc(c, file);
                     tk->type = state_PROLOG;
@@ -195,7 +194,7 @@ int get_token(FILE *file, Token *tk) {
                     {
                         return 0;
                     }
-                    for (int i = 0; i < 9; i++) {
+                    for (int i = 0; i < 10; i++) {
                         if (!strcmp(tk->val.str, kwords[i])) {
                             if(!strcmp(tk->val.str, "float") || !strcmp(tk->val.str, "int") || !strcmp(tk->val.str, "string"))
                             {
@@ -206,7 +205,6 @@ int get_token(FILE *file, Token *tk) {
                             return 0;
                         }
                     }
-
                     state = state_IDENTIFIER;
                 }
                 break;
