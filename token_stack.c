@@ -38,13 +38,13 @@ Token *get_top(Token_stack *stack) {
 
 int is_empty(Token_stack *stack) {
     if (stack->free_index == 0) {
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 
-int push_token(Token_stack *stack, Token token) {
+int push_token(Token_stack *stack, Token *token) {
     if (stack->free_index == stack->capacity) {
         stack->capacity *= 2;
         stack->tokens = (Token *) realloc(stack->tokens, stack->capacity * sizeof(Token));
@@ -52,7 +52,17 @@ int push_token(Token_stack *stack, Token token) {
             return 1;
         }
     }
-    stack->tokens[stack->free_index] = token;
+    Token new_token;
+    init_str(&new_token.val);
+
+    for (unsigned int i = 0; i < token->val.length; i++) {
+        add_char(&new_token.val, token->val.str[i]);
+    }
+    new_token.val.size = token->val.size;
+    new_token.val.length = token->val.length;
+    new_token.type = token->type;
+    new_token.line = token->line;
+    stack->tokens[stack->free_index] = new_token;
     stack->free_index++;
     return 0;
 }
