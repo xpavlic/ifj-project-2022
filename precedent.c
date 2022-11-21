@@ -99,7 +99,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
     Token_stack posfix_stack;
 
     int prev_token_eval = evaluate_token(first_token, if_while);
-    if (prev_token_eval == EXP_ERROR) {
+    if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT) {
         return 2;
     }
 
@@ -204,8 +204,6 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
         } else if (token_eval == RIGHT_PARENT) {
             if (stack_top_eval == LEFT_PARENT) {
                 remove_last_token(&token_stack);
-            } else if (is_empty(&token_stack)) {
-                return 2;
             } else {
                 while (stack_top_eval != EXP_EMPTY) {
                     if (stack_top_eval == LEFT_PARENT) {
@@ -217,6 +215,8 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
                         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     }
                 }
+            } if (stack_top_eval == EXP_EMPTY) {
+                return 2;
             }
         }
         prev_token_eval = token_eval;
