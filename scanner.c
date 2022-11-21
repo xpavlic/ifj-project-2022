@@ -195,7 +195,7 @@ int get_token(FILE *file, Token *tk) {
                     {
                         return 0;
                     }
-                    for (int i = 0; i < 9; i++) {
+                    for (int i = 0; i < 10; i++) {
                         if (!strcmp(tk->val.str, kwords[i])) {
                             if(!strcmp(tk->val.str, "float") || !strcmp(tk->val.str, "int") || !strcmp(tk->val.str, "string"))
                             {
@@ -284,21 +284,20 @@ int get_token(FILE *file, Token *tk) {
             case state_FLOAT_N:
                 if (isdigit(c)) {
                     add_char(&tk->val, c);
-                    state = state_FLOAT;
+                    state = state_FLOAT_N;
 
                 } else if (c == 'e' || c == 'E') {
                     add_char(&tk->val, c);
                     state = state_EXPONENT;
                 } else {
-                    add_char(&tk->val, c);
+                    ungetc(c, file);
+                    tk->type = state_FLOAT;
+                    return 0;
                 }
 
                 break;
             case state_EXPONENT:
-                if (isdigit(c)) {
-                    add_char(&tk->val, c);
-                    state = state_FLOAT;
-                } else if (c == '+' || c == '-') {
+                if (c == '+' || c == '-' || isdigit(c)) {
                     add_char(&tk->val, c);
                     state = state_FLOAT_EN;
                 } else {
