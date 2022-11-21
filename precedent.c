@@ -16,7 +16,7 @@ int evaluate_token(Token *token, int if_while) {
     else if (token->type == state_LESSTHAN || token->type == state_LESSEQUAL || token->type == state_MORETHAN ||
              token->type == state_MOREEQUAL)
         return PRIO_BIGGER;
-    else if (token->type == state_EQUAL || token->type == state_NOTEQUAL) return PRIO_EQUAL;
+    else if (token->type == state_OPEQUAL || token->type == state_NOTEQUAL) return PRIO_EQUAL;
     else if (if_while == 0 && token->type == state_SEMICOLON) return EXP_END;
     else if (if_while == 1 && token->type == state_CLEFTPARENT) return EXP_END;
     else return EXP_ERROR;
@@ -204,6 +204,8 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
         } else if (token_eval == RIGHT_PARENT) {
             if (stack_top_eval == LEFT_PARENT) {
                 remove_last_token(&token_stack);
+            } else if (is_empty(&token_stack)) {
+                return 2;
             } else {
                 while (stack_top_eval != EXP_EMPTY) {
                     if (stack_top_eval == LEFT_PARENT) {
