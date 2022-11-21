@@ -9,7 +9,7 @@
 
 #include <string.h>     // size_t
 #include <stdbool.h>    // bool
-#include <stdint-gcc.h>
+//#include <stdint-gcc.h>
 #include "structs.c"
 
 // Table:
