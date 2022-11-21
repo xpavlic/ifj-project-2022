@@ -67,7 +67,7 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
         return 0;
     }
     tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-    return analyse_expression(input_file, token_stack, 0, tree); //stops on ;
+    return analyse_expression(input_file, token_stack, 0, tree->tail_child->tail_child); //stops on ;
 }
 
 
