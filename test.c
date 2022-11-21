@@ -21,7 +21,7 @@ void check_empty(struct symtable* t, char* string) {
         printf("ERROR\n");
 }
 
-int main() {
+int main_() {
     printf("START\n");
 
     struct symtable* t = symtable_init(&free_string);
