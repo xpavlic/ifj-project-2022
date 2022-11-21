@@ -3,64 +3,11 @@
 #define __HTAB_STRUCTS__
 
 #include <stdlib.h>
+#include "syntax_tree.h"
 
 #define MIN_TABLE_SIZE 10
 #define AVG_LEN_MAX 10
 #define AVG_LEN_MIN 5
-
-enum tree_node_type {
-    BODY,          // null
-    ASSIGN,        // null
-    FIRST_ASSIGN,  // null
-    IF,            // null
-    WHILE,         // null
-    ARGUMENTS,     // null
-    TYPE,          // string
-    NAME,          // string
-
-    RETURN,     // null
-    FUNC_DEC,   // null
-    FUNC_CALL,  // null
-    RETURN_TYPE,
-
-    OPERATOR,  // string
-
-    EXPRESSION,  // null
-
-    // OPERATORS
-    PLUS_OPERATOR,            // +
-    MINUS_OPERATOR,           // -
-    DIVISION_OPERATOR,        // /
-    MULTIPLICATION_OPERATOR,  // *
-    CONCATENATION_OPERATOR,   // .
-    EQUAL_OPERATOR,           // ===
-    NOT_EQUAL_OPERATOR,       // !==
-    SMALLER_OPERATOR,         // <
-    BIGGER_OPERATOR,          // >
-    SMALLER_EQUAL_OPERATOR,   // <=
-    BIGGER_EQUAL_OPERATOR,    // >=
-
-    // TERMINALS
-    T_STRING,     // string
-    T_INT,        // string
-    T_FLOAT,      // string
-    T_NULL,       // null/string
-    VAR_OPERAND,  // string
-
-    // PARAMETERS
-    PARAMETERS,       // null
-    STR_PARAMETER,    // string
-    NULL_PARAMETER,   // string
-    INT_PARAMETER,    // string
-    FLOAT_PARAMETER,  // string
-
-    STR_NULL_PARAMETER,
-    INT_NULL_PARAMETER,
-    FLOAT_NULL_PARAMETER,
-
-    ARGUMENT,  // TO DELETE, instead use 'terminal'/VAR_OPERAND
-
-};
 
 // Typy:
 typedef const char* htab_key_t;  // type of key
