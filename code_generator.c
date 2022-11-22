@@ -1,78 +1,64 @@
-#include "syntax_tree.h"
+#include "code_generator.h"
 
-/*
-TODO:
-13) check kontrola pouzivani stromu
+struct tree_node * find_child_node(struct tree_node * node, int type);
 
-implicitni konverze DONE
-*/
-
-/*
-TODO: LABELS AND NAMES
-
-variable RESULT is special for results:)
-variable GF@_op1 and GF@_op2 are used for operations outside stack
-
-MOVE LF@%s GF@_result
-
-function LABEL 
-    LABEL %s
-function declaration skip  
-    LABEL !S%s
-
-if:
-(based on static variable counter)
-    !IF%d
-    !ELSE%d
-    !ELSEEND%d
-
-while:
-(based on static variable counter)
-    !WHILE%d
-    !WEND%d
-*/
-
-/**
- * @brief generates code based on syntax tree
- * @param struct tree_node * node
-*/
-void code_generator(struct tree_node * node);
-
-
-/**
- * @brief determines what print function should be called upon node
- * @param struct tree_node * node
-*/
-void inbody_scan_node(struct tree_node * node);
-
-/**
- * @brief prints content of node as a code on stdout
- * @param struct tree_node * node
-*/
-void print_body_node(struct tree_node * node);
-void print_decfunc_node(struct tree_node * node);
-void print_callfunc_node(struct tree_node * node);
-void print_assaign_node(struct tree_node * node);
-void print_if_node(struct tree_node * node);
-void print_while_node(struct tree_node * node);
+//BASIC NODE HANDLING
+void print_return_node(struct tree_node * node);
 void print_expression_node(struct tree_node * node);
+void print_while_node(struct tree_node * node);
+void print_if_node(struct tree_node * node);
+void print_assaign_node(struct tree_node * node);
+void print_first_assign_node(struct tree_node * node);
+void print_general_callfunc_node(struct tree_node * node);
+void print_callfunc_node(struct tree_node * node);
+void print_decfunc_node(struct tree_node * node);
+void print_body_node(struct tree_node * body);
+
+// EXPRESSION NODE HANDLING + everything similar to expression 
+void print_string_for_expression(char * string);
+void choose_expr_print(struct tree_node * node);
+void print_operator(int type);
+void postorder(struct tree_node * node);
+
+//CONVERSIONS
+void print_codefunc_int2float_conversion();
+void implicit_conversion_result(char * type);
 
 void pushs_arguments(struct tree_node * node);
-void print_operation_node(struct tree_node * node);
-void postorder(struct tree_node * node);
-void print_operator(int type);
 
-void print_first_assign_node(struct tree_node * node);
-void print_return_node(struct tree_node * node);
+void inbody_scan_node(struct tree_node * node);
 
-void print_general_callfunc_node(struct tree_node * node);
-void choose_expr_print(struct tree_node * node);
-void print_string_for_expression(char * string);
+
+//INITIATION OF VARIABLES AT THE START OF THE PROGRAM
+void print_init_code();
+
 /*
-///////////////////////////////////////////////////////////
-                 HELP FUNCTIONS
-//////////////////////////////////////////////////////////
+    FUNCTIONS DEFINITION AT THE START OF THE PROGRAM
+    -- definitions of functions, that they can be declared
 */
+void print_substring();
+void print_ord();
+void print_strval();
+void print_intval();
+void print_floatval();
+void print_NLTS_NGTS(char*instruction);
+void print_EQS_LTS_GTS(char* instruction);
+
+
+/*
+    ALTERNATIVE FUNCTIONS
+    -- functions that are implemented as inline
+*/
+void print_chr(struct tree_node * node);
+void print_strlen(struct tree_node * node);
+void print_write(struct tree_node * node);
+void print_readf();
+void print_readi();
+void print_reads();
+
+
+//////////////////////////////////////////////////////////
+
 
 struct tree_node * find_child_node(struct tree_node * node, int type){
     if(node == NULL) return NULL;
@@ -96,10 +82,6 @@ void implicit_conversion_result(char * type){
     printf("PUSHS GF@_result\n");
     printf("CALL %sval\n",type);
 }
-
-///////////////////////////////////////////////////////
-//                   MAIN FUNCTIONS
-//////////////////////////////////////////////////////
 
 void inbody_scan_node(struct tree_node * node){
     switch (node->data->type)
