@@ -299,22 +299,25 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
                                                          get_top(token_stack)->val.str); //nazev funkce
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             Variable_array func_var_arr;
+            init_variable_array(&func_var_arr);
             if (get_top(token_stack)->type == state_LEFTPARENT) {
                 tree->tail_child->tail_child = add_tree_node(tree->tail_child, PARAMETERS,
                                                              "function_params"); //zapis argumentu funkce
-                init_variable_array(&func_var_arr);
                 result = analyse_param(input_file, token_stack, tree->tail_child->tail_child, &func_var_arr);
                 if (result != 0) {
                     free_var_arr(&func_var_arr);
                     return result;
                 }
-            } else return 2;
+            } else {
+                free_var_arr(&func_var_arr);
+                return 2;
+            }
             result = analyse_return_type(input_file, token_stack, tree->tail_child); //stops on {
             if (result != 0) {
+                free_var_arr(&func_var_arr);
                 return result;
             }
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "function_body");
-            init_variable_array(&func_var_arr);
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child, &func_var_arr, 0); //stops on }
             if (result != 0) {
                 free_var_arr(&func_var_arr);
