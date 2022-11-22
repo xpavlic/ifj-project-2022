@@ -23,7 +23,7 @@ htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key) {
     // setup new item
     strcpy((char *)newitem->data.key, (char *)key);
     newitem->next = NULL;
-    newitem->data.value = NULL;
+    newitem->data.value = value_init();
 
     // place new item do seznamu
     if (t->arr_ptr[position] == NULL) {
@@ -166,3 +166,16 @@ size_t htab_size(const htab_t *t)  // počet záznamů v tabulce
 }
 
 void nope(void) {}  // does nothing
+
+value_t *value_init() {
+    value_t *ptr = (value_t *)malloc(sizeof(value_t));
+    if (ptr == NULL) {
+        return NULL;
+    }
+    ptr->array = (enum tree_node_type *)malloc(sizeof(int));
+    if (ptr->array == NULL) {
+        return NULL;
+    }
+    ptr->number_of_parameters = 0;
+    return ptr;
+}

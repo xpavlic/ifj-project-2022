@@ -24,6 +24,8 @@ void process_params(struct tree_node *node, htab_pair_t *pair);
 void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
                       struct tree_node *node);
 
+enum tree_node_type eval_ret(char *value);
+
 void add_builtin_functions(symtable_t *symtable_stack);
 
 int semantic_analysis(struct tree_node *node);
