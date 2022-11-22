@@ -21,7 +21,9 @@ int get_token_rec(FILE *input_file, Token_stack *token_stack) {
 }
 
 int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while, struct tree_node *expression_root) {
-    return analyse_precedent(input_file, get_top(token_stack), expression_root, if_while);
+    int result = analyse_precedent(input_file, get_top(token_stack), expression_root, if_while);;
+    //printf( "expression RESULT: %i\n", result);
+    return result;
 }
 
 
@@ -56,7 +58,7 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
     if (get_token_rec(input_file, token_stack) != 0) return 1;
     if (get_top(token_stack)->type == state_IDENTIFIER) {
         tree->tail_child = add_tree_node(tree, FUNC_CALL, "function_call");
-        tree->tail_child = add_tree_node(tree, NAME, get_top(token_stack)->val.str);
+        tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
         if (get_token_rec(input_file, token_stack) != 0) return 1;
         if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
         tree->tail_child->tail_child = add_tree_node(tree->tail_child, ARGUMENTS, "function_args");
@@ -66,8 +68,8 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
         if (get_top(token_stack)->type != state_SEMICOLON) return 2;
         return 0;
     }
-    tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-    return analyse_expression(input_file, token_stack, 0, tree->tail_child->tail_child); //stops on ;
+    add_tree_node(tree, EXPRESSION, "expression");
+    return analyse_expression(input_file, token_stack, 0, tree->tail_child); //stops on ;
 }
 
 
@@ -101,6 +103,15 @@ int analyse_param(FILE *input_file, Token_stack *token_stack, struct tree_node *
             }
             if (!strcmp(get_top(token_stack)->val.str, "string")) {
                 param_type = STR_PARAMETER;
+            }
+            if (!strcmp(get_top(token_stack)->val.str, "?float")) {
+                param_type = FLOAT_NULL_PARAMETER;
+            }
+            if (!strcmp(get_top(token_stack)->val.str, "?int")) {
+                param_type = INT_NULL_PARAMETER;
+            }
+            if (!strcmp(get_top(token_stack)->val.str, "?string")) {
+                param_type = STR_NULL_PARAMETER;
             }
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type == state_VARIABLE) {
@@ -137,12 +148,30 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
 
         //variable assign
         if (get_top(token_stack)->type == state_VARIABLE) {
-            tree->tail_child = add_tree_node(tree, ASSIGN, "assign");
-            tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
+            char variable_name[strlen(get_top(token_stack)->val.str) + 1];
+            strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_EQUAL) return 2;
-            result = analyse_assign(input_file, token_stack, tree->tail_child); //stops on ;
+            if (get_top(token_stack)->type != state_EQUAL) {
+                result = analyse_expression(input_file, token_stack, 0, NULL);
+                if (result != 0) return result;
+                continue;
+            }
+            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            add_tree_node(assign_node, NAME, variable_name);
+            result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
+            continue;
+        }
+
+        if (get_top(token_stack)->type == state_STRING || get_top(token_stack)->type == state_INT ||
+            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0) {
+            if (get_token_rec(input_file, token_stack) != 0) return 1;
+            if (get_top(token_stack)->type != state_EQUAL) {
+                result = analyse_expression(input_file, token_stack, 0, NULL);
+                if (result != 0) return result;
+            } else {
+                return 2;
+            }
             continue;
         }
 
@@ -167,15 +196,13 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             continue;
         }
         //while
-        if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
+        if (strcmp(get_top(token_stack)->val.str, "while") == 0) {
             tree->tail_child = add_tree_node(tree, WHILE, "while");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); // stops on )
+            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); // stops on {
             if (result != 0) return result;
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_CLEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "while body");
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
             if (result != 0) return result;
@@ -245,12 +272,30 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
 
         //variable assign
         if (get_top(token_stack)->type == state_VARIABLE) {
-            tree->tail_child = add_tree_node(tree, ASSIGN, "assign");
-            tree->tail_child->tail_child = add_tree_node(tree->tail_child, NAME, get_top(token_stack)->val.str);
+            char variable_name[strlen(get_top(token_stack)->val.str) + 1];
+            strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_EQUAL) return 2;
-            result = analyse_assign(input_file, token_stack, tree->tail_child); //stops on ;
+            if (get_top(token_stack)->type != state_EQUAL) {
+                result = analyse_expression(input_file, token_stack, 0, NULL);
+                if (result != 0) return result;
+                continue;
+            }
+            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            add_tree_node(assign_node, NAME, variable_name);
+            result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
+            continue;
+        }
+
+        if (get_top(token_stack)->type == state_STRING || get_top(token_stack)->type == state_INT ||
+            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0) {
+            if (get_token_rec(input_file, token_stack) != 0) return 1;
+            if (get_top(token_stack)->type != state_EQUAL) {
+                result = analyse_expression(input_file, token_stack, 0, NULL);
+                if (result != 0) return result;
+            } else {
+                return 2;
+            }
             continue;
         }
 
@@ -275,7 +320,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             continue;
         }
         //while
-        if (strcmp(get_top(token_stack)->val.str, "if") == 0) {
+        if (strcmp(get_top(token_stack)->val.str, "while") == 0) {
             tree->tail_child = add_tree_node(tree, WHILE, "while");
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
@@ -337,6 +382,20 @@ int analyse_prolog(FILE *input_file, Token_stack *token_stack, struct tree_node 
     return analyse_prog(input_file, token_stack, tree);
 }
 
+//CALL WITH LEVEL = 0
+void print_tree(struct tree_node *root, int level) {
+    if (root == NULL)
+        return;
+    for (int i = 0; i < level; i++)
+        printf(i == level - 1 ? "|" : "  ");
+    printf("%s\n", root->data->value);
+    struct tree_node *child = root->head_child;
+    while (child != NULL) {
+        print_tree(child, level + 1);
+        child = child->next_sibling;
+    }
+}
+
 int analyse_syntax(FILE *input_file) {
     Token_stack token_stack;
     int stack_result = init_token_stack(&token_stack);
@@ -349,7 +408,22 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    /*printf("%s\n", tree->data->value);
+    printf("AST\n");
+    printf("root: ");
+    print_tree(tree, 0);
+    printf("syntax result: %i\n", result);
+    /*if (result == 0) {
+        result = semantic_analysis(tree);
+        printf("AFTER SEMANTIC TREE\n");
+        printf("root: ");
+        print_tree(tree, 0);
+    }
+
+    if (result == 0) {
+        //call generator
+    }
+
+    printf("%s\n", tree->data->value);
     printf("%s\n", tree->head_child->data->value);*/
 
     // printf("TOKENSSTACK:\n ");

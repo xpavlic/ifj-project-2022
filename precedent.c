@@ -16,7 +16,7 @@ int evaluate_token(Token *token, int if_while) {
     else if (token->type == state_LESSTHAN || token->type == state_LESSEQUAL || token->type == state_MORETHAN ||
              token->type == state_MOREEQUAL)
         return PRIO_BIGGER;
-    else if (token->type == state_EQUAL || token->type == state_NOTEQUAL) return PRIO_EQUAL;
+    else if (token->type == state_OPEQUAL || token->type == state_NOTEQUAL) return PRIO_EQUAL;
     else if (if_while == 0 && token->type == state_SEMICOLON) return EXP_END;
     else if (if_while == 1 && token->type == state_CLEFTPARENT) return EXP_END;
     else return EXP_ERROR;
@@ -79,27 +79,15 @@ int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expressio
     return 0;
 }
 
-void print_tree(struct tree_node *root, int level)
-{
-    if (root == NULL)
-        return;
-    for (int i = 0; i < level; i++)
-        printf(i == level - 1 ? "|" : "  ");
-    printf("%s\n", root->data->value);
-    struct tree_node* child = root->head_child;
-    while (child != NULL) {
-        print_tree(child, level + 1);
-        child = child->next_sibling;
-    }
-}
-
 int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *expression_root, int if_while) {
+    //printf("ANALYSE EXPRESSION\n");
+    //printf("TOKEN: %s\n TOKEN_TYPE: %i\n", first_token->val.str, first_token->type);
     Token token;
     Token_stack token_stack;
     Token_stack posfix_stack;
 
     int prev_token_eval = evaluate_token(first_token, if_while);
-    if (prev_token_eval == EXP_ERROR) {
+    if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT) {
         return 2;
     }
 
@@ -115,6 +103,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
     while (prev_token_eval != EXP_END) {
         init_str(&token.val);
         if (get_token(input_file, &token) != 0) return 1;
+        //printf("TOKEN: %s\n TOKEN_TYPE: %i\n", token.val.str, token.type);
         int token_eval = evaluate_token(&token, if_while);
         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
         if (token_eval == EXP_ERROR) {
@@ -215,6 +204,8 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
                         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     }
                 }
+            } if (stack_top_eval == EXP_EMPTY) {
+                return 2;
             }
         }
         prev_token_eval = token_eval;
@@ -238,11 +229,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
     printf("\n");
     */
 
-    if (is_empty(&posfix_stack) && if_while == 1) {
-        return 2;
-    }
-
-    if (!is_empty(&posfix_stack)) {
+    if (!is_empty(&posfix_stack) && expression_root != NULL) {
         build_expression_tree(&posfix_stack, expression_root);
     }
 
