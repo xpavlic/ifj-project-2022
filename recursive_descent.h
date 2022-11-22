@@ -9,6 +9,13 @@
 #include "scanner.h"
 #include "syntax_tree.h"
 #include "precedent.h"
+#include "code_generator.h"
+
+typedef struct {
+    char **variables;
+    int free_index;
+    int size;
+} Variable_array;
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 
@@ -20,11 +27,11 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
 
 int analyse_return_type(FILE *input_file, Token_stack *token_stack, struct tree_node *return_node);
 
-int analyse_param(FILE *input_file, Token_stack *token_stack, struct tree_node *param_node);
+int analyse_param(FILE *input_file, Token_stack *token_stack, struct tree_node *param_node, Variable_array *var_arr);
 
-int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *body_node);
+int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *tree, Variable_array *var_array, int remove_index);
 
-int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *root_node);
+int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *root_node, Variable_array *prog_var_array);
 
 int analyse_prolog(FILE *input_file, Token_stack *token_stack, struct tree_node *tree);
 
