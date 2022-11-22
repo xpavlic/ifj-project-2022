@@ -13,6 +13,9 @@ struct tn_data *init_tn_data(int type, const char(*value)) {
 }
 
 struct tn_data *add_tn_data(struct tree_node *node, int type, const char(*value)) {
+    if (node->data != NULL) {
+        free(node->data->value);
+    }
     node->data = init_tn_data(type, value);
     return node->data;
 }
