@@ -11,6 +11,7 @@ static char *kwords[] = {
 
 int get_token(FILE *file, Token *tk) {
     state state = state_START;
+    tk->type = state_START;
     indexE = 0;
     indexH = 0;
     char c;
