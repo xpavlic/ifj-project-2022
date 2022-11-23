@@ -1,4 +1,5 @@
 #include "syntax_tree.h"
+#include <ctype.h>
 
 /**
  * @brief Generates IFJcode2022 based on syntax tree

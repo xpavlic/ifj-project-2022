@@ -455,8 +455,8 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    printf("AST\n");
-    printf("root: ");
+    DEBUG printf("AST\n");
+    DEBUG printf("root: ");
     print_tree(tree, 0);
     printf("result: %i\n", result);
     if (result == 0) {
