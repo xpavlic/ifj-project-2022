@@ -159,7 +159,6 @@ int get_token(FILE *file, Token *tk) {
             case state_PROLOG:
                 if (islower(c) != 0) {
                     add_char(&tk->val, c);
-
                 } else {
                     ungetc(c, file);
                     tk->type = state_PROLOG;
@@ -207,7 +206,6 @@ int get_token(FILE *file, Token *tk) {
                             return 0;
                         }
                     }
-
                     state = state_IDENTIFIER;
                 }
                 break;
@@ -363,10 +361,24 @@ int get_token(FILE *file, Token *tk) {
                 } else if (c == 'x') {
                     add_char(&tk->val, c);
                     state = state_STRING;
+                } else if (c == '$') {
+                    add_char(&tk->val, c);
+                    state = state_STRING;
+                } else if (c == 'v') {
+                    add_char(&tk->val, c);
+                    state = state_STRING;
+                } else if ( c == 'e') {
+                    add_char(&tk->val, c);
+                    state = state_STRING;
+                } else if ( c == 'f') {
+                    add_char(&tk->val,c);
+                    state = state_STRING;
+                } else if ( c == 'r' ) {
+                    add_char(&tk->val,c);
+                    state = state_STRING;
                 } else {
-                    ungetc(c, file);
-                    tk->type = state_ERROR;
-                    return 1;
+                    add_char(&tk->val,c);
+                    state = state_STRING;
                 }
                 break;
 
