@@ -14,7 +14,7 @@ int get_token(FILE *file, Token *tk) {
     tk->type = state_START;
     indexE = 0;
     indexH = 0;
-    char c;
+    int c;
     while (1) {
         c = getc(file);
         switch (state) {
