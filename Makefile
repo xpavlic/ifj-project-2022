@@ -18,3 +18,11 @@ $(TARGET): $(OBJS)
  
 clean:
 	rm -f ${PROGS} ${OBJS} $(TARGET)
+
+run:
+	./main < input.txt > output.txt
+	./ic22int output.txt
+
+debug:
+	./main < input.txt > output.txt
+	./ic22int output.txt -v

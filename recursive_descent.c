@@ -459,13 +459,19 @@ int analyse_prolog(FILE *input_file, Token_stack *token_stack, struct tree_node 
     return result;
 }
 
+//#define DEBUG 
+#ifndef DEBUG
+#define DEBUG if(0)
+#endif
+
 //CALL WITH LEVEL = 0
 void print_tree(struct tree_node *root, int level) {
     if (root == NULL)
         return;
-    for (int i = 0; i < level; i++)
-        printf(i == level - 1 ? "|" : "  ");
-    printf("%s\n", root->data->value);
+    for (int i = 0; i < level; i++){
+    DEBUG printf(i == level - 1 ? "|" : "  ");
+};
+    DEBUG printf("%s\n", root->data->value);
     struct tree_node *child = root->head_child;
     while (child != NULL) {
         print_tree(child, level + 1);
@@ -485,10 +491,10 @@ int analyse_syntax(FILE *input_file) {
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    printf("AST\n");
-    printf("root: ");
+    DEBUG printf("AST\n");
+    DEBUG printf("root: ");
     print_tree(tree, 0);
-    printf("syntax result: %i\n", result);
+    DEBUG printf("syntax result: %i\n", result);
     /*if (result == 0) {
         result = semantic_analysis(tree);
         printf("AFTER SEMANTIC TREE\n");
