@@ -39,7 +39,7 @@ enum tree_node_type state_to_node_type(state scanner_type) {
     else if (scanner_type == state_CONCANT) return CONCATENATION_OPERATOR;
     else if (scanner_type == state_LESSTHAN) return SMALLER_OPERATOR;
     else if (scanner_type == state_LESSEQUAL) return SMALLER_EQUAL_OPERATOR;
-    else if (scanner_type == state_EQUAL) return EQUAL_OPERATOR;
+    else if (scanner_type == state_OPEQUAL) return EQUAL_OPERATOR;
     else if (scanner_type == state_MORETHAN) return BIGGER_OPERATOR;
     else if (scanner_type == state_MOREEQUAL) return BIGGER_EQUAL_OPERATOR;
     else if (scanner_type == state_NOTEQUAL) return NOT_EQUAL_OPERATOR;
