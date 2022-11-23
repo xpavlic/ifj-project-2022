@@ -3,6 +3,7 @@
 #define __HTAB_STRUCTS__
 
 #include <stdlib.h>
+
 #include "syntax_tree.h"
 
 #define MIN_TABLE_SIZE 10
@@ -40,6 +41,7 @@ struct htab {
 typedef struct symtable_item {
     struct htab* hash_table;
     struct symtable_item* next;
+    char* name;
 } symtable_item_t;
 
 typedef struct symtable {

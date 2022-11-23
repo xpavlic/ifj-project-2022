@@ -9,25 +9,48 @@
 #define TYPE_COMPATIBILITY_ERROR 7
 #define INTERNAL_ERROR 99
 
-value_t *value_init();
+int semantic_analysis(struct tree_node *node);
+
 void value_t_free(void *toBeDeleted);
+
+int eval_ret(char *value);
+
+int process_params(struct tree_node *node, htab_pair_t *pair);
+
+/**
+ * @brief Find and add function declarations into a symbol table
+ *
+ * @param fnc_symtable
+ * @param node
+ * @return int
+ */
+int declarations_traversal(symtable_t *fnc_symtable, struct tree_node *node);
+
+/**
+ * @brief Add built in functions into a symbol table
+ *
+ * @param fnc_symtable
+ * @return int
+ */
+int add_builtin_functions(symtable_t *fnc_symtable);
+
+int global_traversal(symtable_t *fnc_symtable, symtable_t *global_symtable, struct tree_node *node);
+
+int traversal_in_function(symtable_t *fnc_symtable, symtable_t *local_symtable, struct tree_node *node, char *name);
 
 int check_type(int type_left_child, int type_right_child, int operator);
 
-int traversal_type_propagation(struct tree_node *node, symtable_t *t,
-                               symtable_t *fnc_symtable);
+int traversal_type_propagation(symtable_t *fnc_symtable, symtable_t *t, struct tree_node *node);
 
-void check_arguments(struct tree_node *node, htab_pair_t *fnc_rec);
+int check_write_arguments(struct tree_node *node, symtable_t *fnc_symtable, symtable_t *t);
 
-void process_params(struct tree_node *node, htab_pair_t *pair);
+int check_arguments(symtable_t *fnc_symtable, symtable_t *local_symtable, struct tree_node *node, htab_pair_t *fnc_rec);
 
-void traversal_second(symtable_t *fnc_symtable, symtable_t *symtable_stack,
-                      struct tree_node *node);
+int check_return_type(symtable_t *fnc_symtable, symtable_t *t, struct tree_node *node, char *name);
 
-enum tree_node_type eval_ret(char *value);
-
-void add_builtin_functions(symtable_t *symtable_stack);
-
-int semantic_analysis(struct tree_node *node);
-
-void error_handler(int error);
+/**
+ * @brief Value_t destructor
+ *
+ * @param toBeDeleted
+ */
+void value_t_free(void *toBeDeleted);

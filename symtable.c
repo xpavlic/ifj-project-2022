@@ -48,11 +48,11 @@ void symtable_free(struct symtable *t) {
 htab_pair_t *symtable_find(struct symtable *t, htab_key_t key) {
     if (t == NULL) return NULL;
     htab_pair_t *found_value = NULL;
-    struct symtable_item *node = t->head;
-
-    found_value = htab_find(node->hash_table, key);
-    if (found_value != NULL) return found_value;
-
+    for (struct symtable_item *node = t->head; node != NULL;
+         node = node->next) {
+        found_value = htab_find(node->hash_table, key);
+        if (found_value != NULL) return found_value;
+    }
     return NULL;
 }
 
