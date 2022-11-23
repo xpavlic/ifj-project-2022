@@ -14,7 +14,7 @@
 #define TYPE(node) node->data->type
 
 int semantic_analysis(struct tree_node *node) {
-    int return_state = 0;
+    enum tree_node_type return_state = 0;
     symtable_t *fnc_symtable = symtable_init(&value_t_free);
     if (fnc_symtable == NULL)
         return INTERNAL_ERROR;
@@ -47,8 +47,13 @@ int declarations_traversal(symtable_t *fnc_symtable, struct tree_node *node) {
             for (struct tree_node *tmp1 = tmp->head_child; tmp1 != NULL;
                  tmp1 = tmp1->next_sibling) {
                 if (tmp1->data->type == NAME) {
-                    new_pair = symtable_add(fnc_symtable, tmp1->data->value);
-                    if (new_pair == NULL) return INTERNAL_ERROR;
+                    new_pair = symtable_find(fnc_symtable, tmp1->data->value);
+                    if (new_pair == NULL) {
+                        new_pair = symtable_add(fnc_symtable, tmp1->data->value);
+                        if (new_pair == NULL) return INTERNAL_ERROR;
+                    } else {
+                        return REDECLARATION_UNDECLARED;
+                    }
                 }
                 if (tmp1->data->type == PARAMETERS) {
                     if (process_params(tmp1->head_child, new_pair) != 0) return INTERNAL_ERROR;
@@ -65,13 +70,12 @@ int declarations_traversal(symtable_t *fnc_symtable, struct tree_node *node) {
 
 int global_traversal(symtable_t *fnc_symtable, symtable_t *global_symtable, struct tree_node *node) {
     fprintf(stderr, "Spracovavana NODE: %s\n", node->data->value);
-    int return_state = 0;
+    enum tree_node_type return_state = 0;
     if (TYPE(node) == BODY) {
         symtable_add_frame(global_symtable);
         for (struct tree_node *tmp = node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
 
             return_state = global_traversal(fnc_symtable, global_symtable, tmp);
-            fprintf(stderr, " RETURN: %d\n", return_state);
             if (return_state != 0) return return_state;
         }
         symtable_remove_frame(global_symtable);
@@ -105,7 +109,13 @@ int global_traversal(symtable_t *fnc_symtable, symtable_t *global_symtable, stru
         /* Spracovanie tela funkcie*/
         symtable_t *local_symtable = symtable_init(&value_t_free);
         if (local_symtable == NULL) return INTERNAL_ERROR;
-        return_state = global_traversal(fnc_symtable, local_symtable, node->tail_child);
+        symtable_add_frame(local_symtable);
+        return_state = add_params_into_frame(local_symtable, node->head_child->next_sibling);
+        if (return_state != 0) {
+            symtable_free(local_symtable);
+            return return_state;
+        }
+        return_state = traversal_in_function(fnc_symtable, local_symtable, node->tail_child->head_child, node->head_child->data->value);
         symtable_free(local_symtable);
     } else if (TYPE(node) == IF) {
         for (struct tree_node *tmp = node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
@@ -121,18 +131,35 @@ int global_traversal(symtable_t *fnc_symtable, symtable_t *global_symtable, stru
         if (fnc_rec == NULL) return REDECLARATION_UNDECLARED;
         /* Kontrola typu argumentov*/
         if (!strcmp(node->head_child->data->value, "write")) {
-            fprintf(stderr, "som tu\n");
             return_state = check_write_arguments(node->tail_child, fnc_symtable, global_symtable);
         } else {
-            fprintf(stderr, "som tu\n");
             return_state = check_arguments(fnc_symtable, global_symtable, node->tail_child, fnc_rec);
         }
     }
     return return_state;
 }
 
+int add_params_into_frame(symtable_t *local_symtable, struct tree_node *PARAMETERS) {
+    for (struct tree_node *tmp = PARAMETERS->head_child; tmp != NULL; tmp = tmp->next_sibling) {
+        htab_pair_t *new_pair = symtable_add(local_symtable, tmp->data->value);
+        if (new_pair == NULL) return INTERNAL_ERROR;
+        enum tree_node_type param_type = tmp->data->type;
+        if (param_type == INT_NULL_PARAMETER || param_type == INT_PARAMETER) {
+            ((value_t *)new_pair->value)->arg_var_type = T_INT;
+        } else if (param_type == FLOAT_NULL_PARAMETER || param_type == FLOAT_PARAMETER) {
+            ((value_t *)new_pair->value)->arg_var_type = T_FLOAT;
+        } else if (param_type == STR_NULL_PARAMETER || param_type == STR_PARAMETER) {
+            ((value_t *)new_pair->value)->arg_var_type = T_STRING;
+        } else if (param_type == NULL_PARAMETER) {
+            ((value_t *)new_pair->value)->arg_var_type = T_NULL;
+        }
+        fprintf(stderr, "Add param into frame. Name: %s Type: %d\n", new_pair->key, ((value_t *)new_pair->value)->arg_var_type);
+    }
+    return 0;
+}
+
 int traversal_type_propagation(symtable_t *fnc_symtable, symtable_t *t, struct tree_node *node) {
-    int type = 99;
+    enum tree_node_type type = TYPE_COMPATIBILITY_ERROR;
     if (TYPE(node) == EXPRESSION) {
         /* Spracovanie syna - nejaky operator */
         type = traversal_type_propagation(fnc_symtable, t, node->head_child);
@@ -145,7 +172,6 @@ int traversal_type_propagation(symtable_t *fnc_symtable, symtable_t *t, struct t
                node->data->type == NOT_EQUAL_OPERATOR ||
                node->data->type == SMALLER_OPERATOR ||
                node->data->type == BIGGER_OPERATOR ||
-               node->data->type == BIGGER_OPERATOR ||
                node->data->type == SMALLER_EQUAL_OPERATOR ||
                node->data->type == BIGGER_EQUAL_OPERATOR) {
         type = check_type(traversal_type_propagation(fnc_symtable, t, node->head_child), traversal_type_propagation(fnc_symtable, t, node->tail_child), node->data->type);
@@ -153,18 +179,37 @@ int traversal_type_propagation(symtable_t *fnc_symtable, symtable_t *t, struct t
     } else if (node->data->type == VAR_OPERAND) {
         type = ((value_t *)symtable_find(t, node->data->value)->value)->arg_var_type;
     } else if (node->data->type == FUNC_CALL) {
-        fprintf(stderr, "FUNC CALL\n");
         /* Najdenie funkcie v TS funckii */
         htab_pair_t *fnc_rec = symtable_find(fnc_symtable, node->head_child->data->value);
         if (fnc_rec == NULL) return REDECLARATION_UNDECLARED;
         /* Kontrola typu argumentov*/
-        int a = check_arguments(fnc_symtable, t, node->tail_child, fnc_rec);
-        if (a != 0) {
-            fprintf(stderr, "WRONG ARGUMENTS: %d\n", a);
-            return a;
+        enum tree_node_type return_state = check_arguments(fnc_symtable, t, node->tail_child, fnc_rec);
+        if (return_state != 0) {
+            return return_state;
         };
         /* Priradenie typu */
         type = (((value_t *)fnc_rec->value)->return_type);
+        switch (type) {
+        case INT_PARAMETER:
+        case INT_NULL_PARAMETER:
+        case T_INT:
+            type = T_INT;
+            break;
+        case FLOAT_NULL_PARAMETER:
+        case FLOAT_PARAMETER:
+        case T_FLOAT:
+            type = T_FLOAT;
+            break;
+        case STR_NULL_PARAMETER:
+        case STR_PARAMETER:
+        case T_STRING:
+            type = T_STRING;
+            break;
+        default:
+            type = WRONG_ARGUMENT_RETURN;
+            break;
+        }
+
     } else if (node->data->type == T_STRING || node->data->type == T_INT ||
                node->data->type == T_FLOAT ||
                node->data->type == STR_NULL_PARAMETER ||
@@ -172,19 +217,17 @@ int traversal_type_propagation(symtable_t *fnc_symtable, symtable_t *t, struct t
                node->data->type == FLOAT_NULL_PARAMETER) {
         type = node->data->type;
     }
-    fprintf(stderr, "TYPE:%d NODE:%d VALUE: %s\n", type, node->data->type, node->data->value);
     return type;
 }
 
 int traversal_in_function(symtable_t *fnc_symtable, symtable_t *local_symtable, struct tree_node *node, char *name) {
-    fprintf(stderr, "Spracovavana NODE: %s - in func\n", node->data->value);
-    int return_state = 0;
+    fprintf(stderr, "Spracovavana NODE: %s - in func: %s\n", node->data->value, name);
+    enum tree_node_type return_state = 0;
     if (TYPE(node) == BODY) {
         symtable_add_frame(local_symtable);
         for (struct tree_node *tmp = node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
 
             return_state = traversal_in_function(fnc_symtable, local_symtable, tmp, name);
-            fprintf(stderr, " RETURN: %d\n", return_state);
             if (return_state != 0) return return_state;
         }
         symtable_remove_frame(local_symtable);
@@ -233,27 +276,43 @@ int traversal_in_function(symtable_t *fnc_symtable, symtable_t *local_symtable, 
 
 int add_builtin_functions(symtable_t *fnc_symtable) {
     /* reads */
-    htab_pair_t *reads = symtable_add(fnc_symtable, "reads");
-    if (reads == NULL)
-        return INTERNAL_ERROR;
+    htab_pair_t *reads = symtable_find(fnc_symtable, "reads");
+    if (reads == NULL) {
+        reads = symtable_add(fnc_symtable, "reads");
+        if (reads == NULL) return INTERNAL_ERROR;
+    } else {
+        return REDECLARATION_UNDECLARED;
+    }
     ((value_t *)reads->value)->number_of_parameters = 0;
     ((value_t *)reads->value)->return_type = STR_NULL_PARAMETER;
     /* readi */
-    htab_pair_t *readi = symtable_add(fnc_symtable, "readi");
-    if (readi == NULL)
-        return INTERNAL_ERROR;
+    htab_pair_t *readi = symtable_find(fnc_symtable, "readi");
+    if (readi == NULL) {
+        readi = symtable_add(fnc_symtable, "readi");
+        if (readi == NULL) return INTERNAL_ERROR;
+    } else {
+        return REDECLARATION_UNDECLARED;
+    }
     ((value_t *)readi->value)->number_of_parameters = 0;
     ((value_t *)readi->value)->return_type = INT_NULL_PARAMETER;
     /* readf */
-    htab_pair_t *readf = symtable_add(fnc_symtable, "readf");
-    if (readf == NULL)
-        return INTERNAL_ERROR;
+    htab_pair_t *readf = symtable_find(fnc_symtable, "readf");
+    if (readf == NULL) {
+        readf = symtable_add(fnc_symtable, "readf");
+        if (readf == NULL) return INTERNAL_ERROR;
+    } else {
+        return REDECLARATION_UNDECLARED;
+    }
     ((value_t *)readf->value)->number_of_parameters = 0;
     ((value_t *)readf->value)->return_type = FLOAT_NULL_PARAMETER;
     /* write */
-    htab_pair_t *write = symtable_add(fnc_symtable, "write");
-    if (write == NULL)
-        return INTERNAL_ERROR;
+    htab_pair_t *write = symtable_find(fnc_symtable, "write");
+    if (write == NULL) {
+        write = symtable_add(fnc_symtable, "write");
+        if (write == NULL) return INTERNAL_ERROR;
+    } else {
+        return REDECLARATION_UNDECLARED;
+    }
 
     return 0;
 }
@@ -292,7 +351,7 @@ void value_t_free(void *toBeDeleted) {
 }
 
 int check_write_arguments(struct tree_node *node, symtable_t *fnc_symtable, symtable_t *t) {
-    int type;
+    enum tree_node_type type;
     for (struct tree_node *tmp = node->head_child; tmp != NULL;
          tmp = tmp->next_sibling) {
         type = traversal_type_propagation(fnc_symtable, t, tmp);
@@ -305,8 +364,8 @@ int check_write_arguments(struct tree_node *node, symtable_t *fnc_symtable, symt
 
 int check_arguments(symtable_t *fnc_symtable, symtable_t *local_symtable, struct tree_node *node, htab_pair_t *fnc_rec) {
     int processed_argument_i = 0;
-    int type;
-    int expected;
+    enum tree_node_type type;
+    enum tree_node_type expected;
     value_t *content = ((value_t *)fnc_rec->value);
     for (struct tree_node *tmp = node->head_child; tmp != NULL;
          tmp = tmp->next_sibling) {
@@ -314,12 +373,12 @@ int check_arguments(symtable_t *fnc_symtable, symtable_t *local_symtable, struct
             return WRONG_ARGUMENT_RETURN;
         }
         type = traversal_type_propagation(fnc_symtable, local_symtable, tmp);
-        fprintf(stderr, "GOT ARG TYPE: %d\n", type);
+        fprintf(stderr, "NODE: %s GOT ARG TYPE: %d\n", tmp->data->value, type);
         if (type == TYPE_COMPATIBILITY_ERROR) {
             return TYPE_COMPATIBILITY_ERROR;
         }
         expected = (int)content->array[processed_argument_i++];
-        fprintf(stderr, "EXPECT ARG TYPE: %d\n", expected);
+        fprintf(stderr, "NODE: %s EXPECTED ARG TYPE: %d\n", tmp->data->value, expected);
         if (expected == INT_PARAMETER && type != T_INT) {
             return WRONG_ARGUMENT_RETURN;
         } else if (expected == INT_NULL_PARAMETER && (type != T_INT && type != T_NULL)) {
@@ -338,6 +397,7 @@ int check_arguments(symtable_t *fnc_symtable, symtable_t *local_symtable, struct
 }
 
 int check_type(int type_left_child, int type_right_child, int operator) {
+    fprintf(stderr, "CHECKING OPERATION: LEFT_OP: %d OPERATOR: %d  RIGHT_OP:%d\n", type_left_child, operator, type_right_child);
     switch (operator) {
     case PLUS_OPERATOR:
     case MINUS_OPERATOR:
@@ -398,12 +458,9 @@ int check_type(int type_left_child, int type_right_child, int operator) {
 }
 
 int check_return_type(symtable_t *fnc_symtable, symtable_t *t, struct tree_node *node, char *name) {
-    fprintf(stderr, "checkujem\n");
     htab_pair_t *fnc_rec = symtable_find(fnc_symtable, name);
-    int expected = ((value_t *)fnc_rec->value)->return_type;
-    fprintf(stderr, "expected : %d\n", expected);
-    int return_exp = traversal_type_propagation(fnc_symtable, t, node->head_child);
-    fprintf(stderr, "got : %d\n", return_exp);
+    enum tree_node_type expected = ((value_t *)fnc_rec->value)->return_type;
+    enum tree_node_type return_exp = traversal_type_propagation(fnc_symtable, t, node->head_child);
     if (expected == return_exp) {
         return 0;
     } else {

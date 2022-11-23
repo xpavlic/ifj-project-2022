@@ -54,3 +54,17 @@ int check_return_type(symtable_t *fnc_symtable, symtable_t *t, struct tree_node 
  * @param toBeDeleted
  */
 void value_t_free(void *toBeDeleted);
+int check_write_arguments(struct tree_node *node, symtable_t *fnc_symtable, symtable_t *t);
+
+int check_arguments(symtable_t *fnc_symtable, symtable_t *local_symtable, struct tree_node *node, htab_pair_t *fnc_rec);
+
+int check_return_type(symtable_t *fnc_symtable, symtable_t *t, struct tree_node *node, char *name);
+
+/**
+ * @brief Value_t destructor
+ *
+ * @param toBeDeleted
+ */
+void value_t_free(void *toBeDeleted);
+
+int add_params_into_frame(symtable_t *local_symtable, struct tree_node *PARAMETERS);
