@@ -436,7 +436,7 @@ int get_token(FILE *file, Token *tk) {
                     state = state_BLOCK_COMMENT_END;
                 } else if (c == EOF) {
                     tk->type = state_EOF;
-                    return 0;
+                    return 1;
                 } else {
                     state = state_BLOCK_COMMENT;
                 }
