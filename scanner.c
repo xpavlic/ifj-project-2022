@@ -4,6 +4,7 @@ static int line;
 static int indexE;
 static int indexH;
 
+
 static char *kwords[] = {
         "else\0", "float\0",  "function\0", "if\0",   "int\0",
         "null\0", "return\0", "string\0",   "void\0", "while\0",
@@ -14,12 +15,17 @@ int get_token(FILE *file, Token *tk) {
     tk->type = state_START;
     indexE = 0;
     indexH = 0;
+    static int flagPre = 0;
     int c;
     while (1) {
         c = getc(file);
         switch (state) {
             case state_START:
                 if (isspace(c) != 0) {
+                    if( !flagPre )
+                    {
+                        return 2;
+                    }
                     state = state_START;
                 } else if (isalpha(c)) {
                     add_char(&tk->val, c);
@@ -161,6 +167,7 @@ int get_token(FILE *file, Token *tk) {
                     add_char(&tk->val, c);
                 } else {
                     ungetc(c, file);
+                    flagPre++;
                     tk->type = state_PROLOG;
                     return 0;
                 }
@@ -228,6 +235,8 @@ int get_token(FILE *file, Token *tk) {
                 } else if (c == '>') {
                     add_char(&tk->val, c);
                     tk->type = state_END;
+                    if( getc(file) != EOF)
+                        return 2;
                     return 0;
                 } else {
                     ungetc(c, file);
