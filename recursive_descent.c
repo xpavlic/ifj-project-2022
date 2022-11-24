@@ -513,6 +513,7 @@ int analyse_syntax(FILE *input_file) {
 
     // printf("\n");
 
+    free_tree_node(tree);
     free_tokens_stack(&token_stack);
     return result;
 }

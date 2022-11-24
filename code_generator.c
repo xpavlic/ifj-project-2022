@@ -937,8 +937,57 @@ void definition_null2int(){
 
 }
 
-void code_generator(struct tree_node * node){
+//TODO: UGLY FIX
 
+void move_assign(struct tree_node * original_node, int count){
+    original_node->data->type=ASSIGN;
+    struct tree_node * iterator_node = NULL;
+    for(iterator_node = original_node->parent;count!=0;iterator_node=iterator_node->parent){
+        if(iterator_node->data!=NULL && iterator_node->data->type==WHILE){
+            count--;
+        }
+    }
+    //checking for duplicate defvar
+    for(struct tree_node * node = iterator_node->head_child;node->data->type==FIRST_ASSIGN;node=node->next_sibling){
+        if(!strcmp(node->head_child->data->value,original_node->head_child->data->value))return;
+    }
+
+    struct tree_node *new_node = init_tree_node();
+    new_node->parent = iterator_node;
+    add_tn_data(new_node, FIRST_ASSIGN, "");
+
+    new_node->next_sibling=iterator_node->head_child;
+    iterator_node->head_child = new_node;
+
+    add_tree_node(new_node,NAME,original_node->head_child->data->value);
+    add_tree_node(new_node,T_INT,"0");
+}
+
+void tree_traversal(struct tree_node * node, int count){
+    if(node == NULL){
+        return;
+    }
+    else{
+        if(node->data!=NULL && node->data->type==FIRST_ASSIGN && count !=0){
+            move_assign(node, count);
+        }
+        if(node->data!=NULL && node->data->type==WHILE){
+            count++;
+        }
+        for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
+            tree_traversal(child_node, count);
+        }
+
+    }
+}
+
+
+
+
+
+void code_generator(struct tree_node * node){
+    //TODO: UGLY FIX
+    tree_traversal(node,0);
     print_init_code();
 
 
@@ -980,3 +1029,4 @@ void code_generator(struct tree_node * node){
     //TODO:
     //potom asi to ma delat neco na konci?? asi nějaký return
 }
+
