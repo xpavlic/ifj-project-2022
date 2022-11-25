@@ -42,7 +42,7 @@ htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key) {
 }
 
 // File::Bucket
-size_t htab_bucket_count(const htab_t *t)  // velikost pole
+size_t htab_bucket_count(const htab_t *t) // velikost pole
 {
     if (t == NULL) return 0;
     return t->arr_size;
@@ -50,7 +50,7 @@ size_t htab_bucket_count(const htab_t *t)  // velikost pole
 
 // File::Clear
 
-void htab_clear(htab_t *t, void (*f)(void *))  // ruší všechny záznamy
+void htab_clear(htab_t *t, void (*f)(void *)) // ruší všechny záznamy
 {
     htab_item_t *start = NULL;
     htab_item_t *tmpnext = NULL;
@@ -70,7 +70,7 @@ void htab_clear(htab_t *t, void (*f)(void *))  // ruší všechny záznamy
 }
 
 // File::find
-htab_pair_t *htab_find(htab_t *t, htab_key_t key)  // hledání
+htab_pair_t *htab_find(htab_t *t, htab_key_t key) // hledání
 {
     if (t == NULL || key == NULL) return NULL;
     size_t position = (htab_hash_function(key) % t->arr_size);
@@ -91,7 +91,7 @@ void htab_for_each(const htab_t *t, void (*f)(htab_pair_t *data)) {
     }
 }
 
-void htab_free(htab_t *t, void (*f)(void *))  // destruktor tabulky
+void htab_free(htab_t *t, void (*f)(void *)) // destruktor tabulky
 {
     htab_clear(t, f);
     free(t->arr_ptr);
@@ -101,9 +101,10 @@ void htab_free(htab_t *t, void (*f)(void *))  // destruktor tabulky
 size_t htab_hash_function(const char *str) {
     if (str == NULL) return 0;
 
-    uint32_t h = 0;  // musí mít 32 bitů
+    uint32_t h = 0; // musí mít 32 bitů
     const unsigned char *p;
-    for (p = (const unsigned char *)str; *p != '\0'; p++) h = 65599 * h + *p;
+    for (p = (const unsigned char *)str; *p != '\0'; p++)
+        h = 65599 * h + *p;
     return h;
 }
 
@@ -124,7 +125,7 @@ htab_t *htab_init(size_t n) {
     return mytab;
 }
 
-void htab_resize(htab_t *t, size_t newn)  // změna velikosti pole
+void htab_resize(htab_t *t, size_t newn) // změna velikosti pole
 {
     // arg check                                     // (umožňuje rezervaci
     // místa)
@@ -159,13 +160,13 @@ void htab_resize(htab_t *t, size_t newn)  // změna velikosti pole
     return;
 }
 
-size_t htab_size(const htab_t *t)  // počet záznamů v tabulce
+size_t htab_size(const htab_t *t) // počet záznamů v tabulce
 {
     if (t == NULL) return 0;
     return t->size;
 }
 
-void nope(void) {}  // does nothing
+void nope(void) {} // does nothing
 
 value_t *value_init() {
     value_t *ptr = (value_t *)malloc(sizeof(value_t));
@@ -177,5 +178,6 @@ value_t *value_init() {
         return NULL;
     }
     ptr->number_of_parameters = 0;
+    ptr->return_type = 0;
     return ptr;
 }
