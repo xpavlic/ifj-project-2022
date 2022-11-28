@@ -55,7 +55,7 @@ int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expressio
         token = posfix_stack->tokens[i];
         if (token.type == state_VARIABLE || token.type == state_INT || token.type == state_STRING ||
             token.type == state_FLOAT || strcmp(token.val.str, "null") == 0) {
-            struct tree_node* new_node = init_tree_node();
+            struct tree_node *new_node = init_tree_node();
             if (strcmp(token.val.str, "null") == 0) {
                 add_tn_data(new_node, T_NULL, token.val.str);
             } else {
@@ -63,11 +63,11 @@ int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expressio
             }
             node_stack_push(&node_stack, new_node);
         } else {
-            struct tree_node* r_node = node_stack_top(&node_stack);
+            struct tree_node *r_node = node_stack_top(&node_stack);
             node_stack_pop(&node_stack);
-            struct tree_node* l_node = node_stack_top(&node_stack);
+            struct tree_node *l_node = node_stack_top(&node_stack);
             node_stack_pop(&node_stack);
-            struct tree_node* new_node = init_tree_node();
+            struct tree_node *new_node = init_tree_node();
             if (add_tn_data(new_node, state_to_node_type(token.type), token.val.str) == NULL) return 99;
             add_tree_node_object(new_node, l_node);
             add_tree_node_object(new_node, r_node);
@@ -79,7 +79,8 @@ int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expressio
     return 0;
 }
 
-int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *expression_root, int if_while) {
+int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_token, struct tree_node *expression_root,
+                      int if_while) {
     //printf("ANALYSE EXPRESSION\n");
     //printf("TOKEN: %s\n TOKEN_TYPE: %i\n", first_token->val.str, first_token->type);
     Token token;
@@ -94,7 +95,17 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
     init_token_stack(&posfix_stack);
     init_token_stack(&token_stack);
 
-    if (prev_token_eval == NON_TERMINAL) {
+    if (pre_first_token != NULL) {
+        if (prev_token_eval != PRIO_MUL && prev_token_eval != PRIO_PLUS && prev_token_eval != PRIO_BIGGER &&
+            prev_token_eval != PRIO_EQUAL && prev_token_eval != EXP_END) {
+            return 2;
+        }
+        if (prev_token_eval != EXP_END) {
+            push_token(&token_stack, first_token);
+        }
+        push_token(&posfix_stack, pre_first_token);
+
+    } else if (prev_token_eval == NON_TERMINAL) {
         push_token(&posfix_stack, first_token);
     } else if (prev_token_eval != EXP_END) {
         push_token(&token_stack, first_token);
@@ -204,7 +215,8 @@ int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *ex
                         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     }
                 }
-            } if (stack_top_eval == EXP_EMPTY) {
+            }
+            if (stack_top_eval == EXP_EMPTY) {
                 return 2;
             }
         }

@@ -23,7 +23,8 @@ enum precedent_types {
     EXP_EMPTY
 };
 
-int analyse_precedent(FILE *input_file, Token *first_token, struct tree_node *expression_root, int if_while);
+int analyse_precedent(FILE *input_file, Token *first_token, Token *second_token, struct tree_node *expression_root,
+                      int if_while);
 
 
 #endif //IFJ_PROJECT_PRECEDENT_H
