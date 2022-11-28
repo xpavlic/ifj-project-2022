@@ -20,9 +20,16 @@ int get_token_rec(FILE *input_file, Token_stack *token_stack) {
     return 0;
 }
 
-int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while, struct tree_node *expression_root) {
-    int result = analyse_precedent(input_file, get_top(token_stack), expression_root, if_while);;
-    //printf( "expression RESULT: %i\n", result);
+int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while, struct tree_node *expression_root,
+                       int spec_expression) {
+    int result;
+    if (spec_expression == 0) {
+        result = analyse_precedent(input_file, get_top(token_stack), NULL, expression_root, if_while);
+    } else {
+        result = analyse_precedent(input_file, get_top(token_stack),
+                                   &token_stack->tokens[token_stack->free_index - 2],
+                                   expression_root, if_while);
+    }
     return result;
 }
 
@@ -69,7 +76,7 @@ int analyse_assign(FILE *input_file, Token_stack *token_stack, struct tree_node 
         return 0;
     }
     add_tree_node(tree, EXPRESSION, "expression");
-    return analyse_expression(input_file, token_stack, 0, tree->tail_child); //stops on ;
+    return analyse_expression(input_file, token_stack, 0, tree->tail_child, 0); //stops on ;
 }
 
 
@@ -152,11 +159,12 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_EQUAL) {
-                result = analyse_expression(input_file, token_stack, 0, NULL);
+                struct tree_node *assign_node = add_tree_node(tree, EXPRESSION, "expression");
+                result = analyse_expression(input_file, token_stack, 0, assign_node, 1);
                 if (result != 0) return result;
                 continue;
             }
-            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            struct tree_node *assign_node = add_tree_node(tree, ASSIGN, "assign");
             add_tree_node(assign_node, NAME, variable_name);
             result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
@@ -164,14 +172,11 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
         }
 
         if (get_top(token_stack)->type == state_STRING || get_top(token_stack)->type == state_INT ||
-            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0) {
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_EQUAL) {
-                result = analyse_expression(input_file, token_stack, 0, NULL);
-                if (result != 0) return result;
-            } else {
-                return 2;
-            }
+            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0 ||
+            get_top(token_stack)->type == state_LEFTPARENT) {
+            struct tree_node *assign_node = add_tree_node(tree, EXPRESSION, "expression");
+            result = analyse_expression(input_file, token_stack, 0, assign_node, 0);
+            if (result != 0) return result;
             continue;
         }
 
@@ -181,7 +186,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); //stops on {
+            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child, 0); //stops on {
             if (result != 0) return result;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "IF_BODY");
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
@@ -201,7 +206,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); // stops on {
+            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child, 0); // stops on {
             if (result != 0) return result;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "while body");
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
@@ -215,7 +220,7 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_SEMICOLON) {
                 tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-                result = analyse_expression(input_file, token_stack, 0, tree->tail_child->tail_child); // stops on ;
+                result = analyse_expression(input_file, token_stack, 0, tree->tail_child->tail_child, 0); // stops on ;
                 if (result != 0) return result;
             }
             continue;
@@ -276,11 +281,12 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             strcpy(variable_name, get_top(token_stack)->val.str);
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_EQUAL) {
-                result = analyse_expression(input_file, token_stack, 0, NULL);
+                struct tree_node *assign_node = add_tree_node(tree, EXPRESSION, "expression");
+                result = analyse_expression(input_file, token_stack, 0, assign_node, 1);
                 if (result != 0) return result;
                 continue;
             }
-            struct tree_node* assign_node = add_tree_node(tree, ASSIGN, "assign");
+            struct tree_node *assign_node = add_tree_node(tree, ASSIGN, "assign");
             add_tree_node(assign_node, NAME, variable_name);
             result = analyse_assign(input_file, token_stack, assign_node); //stops on ;
             if (result != 0) return result;
@@ -288,14 +294,11 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
         }
 
         if (get_top(token_stack)->type == state_STRING || get_top(token_stack)->type == state_INT ||
-            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0) {
-            if (get_token_rec(input_file, token_stack) != 0) return 1;
-            if (get_top(token_stack)->type != state_EQUAL) {
-                result = analyse_expression(input_file, token_stack, 0, NULL);
-                if (result != 0) return result;
-            } else {
-                return 2;
-            }
+            get_top(token_stack)->type == state_FLOAT || strcmp(get_top(token_stack)->val.str, "null") == 0 ||
+            get_top(token_stack)->type == state_LEFTPARENT) {
+            struct tree_node *assign_node = add_tree_node(tree, EXPRESSION, "expression");
+            result = analyse_expression(input_file, token_stack, 0, assign_node, 0);
+            if (result != 0) return result;
             continue;
         }
 
@@ -305,7 +308,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); //stops on {
+            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child, 0); //stops on {
             if (result != 0) return result;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "IF_body");
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
@@ -325,7 +328,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_token_rec(input_file, token_stack) != 0) return 1;
             if (get_top(token_stack)->type != state_LEFTPARENT) return 2;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
-            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child); // stops on {
+            result = analyse_expression(input_file, token_stack, 1, tree->tail_child->tail_child, 0); // stops on {
             if (result != 0) return result;
             tree->tail_child->tail_child = add_tree_node(tree->tail_child, BODY, "WHILE_body");
             result = analyse_body(input_file, token_stack, tree->tail_child->tail_child); //stops on }
@@ -340,7 +343,7 @@ int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *t
             if (get_top(token_stack)->type != state_SEMICOLON) {
                 tree->tail_child->tail_child = add_tree_node(tree->tail_child, EXPRESSION, "expression");
                 result = analyse_expression(input_file, token_stack,
-                                            0, tree->tail_child->tail_child); // stops on ;
+                                            0, tree->tail_child->tail_child, 0); // stops on ;
                 if (result != 0) return result;
             }
             continue;
