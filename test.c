@@ -31,7 +31,7 @@ int main_() {
     for (int i = 0; i < 30; i++) {
         A[0] = '0' + i / 10;
         A[1] = '0' + i % 10;
-        symtable_add(t, A)->value = (void*)make_string(A);
+        symtable_add(t, A, &value_create_null)->value = (void*)make_string(A);
     }
 
     for (int i = 0; i < 30; i++) {
