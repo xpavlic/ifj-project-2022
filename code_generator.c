@@ -13,6 +13,7 @@ void print_general_callfunc_node(struct tree_node * node);
 void print_callfunc_node(struct tree_node * node);
 void print_decfunc_node(struct tree_node * node);
 void print_body_node(struct tree_node * body);
+void print_defvar_node(struct tree_node * body);
 
 // EXPRESSION NODE HANDLING + everything similar to expression 
 void print_string_for_expression(char * string);
@@ -70,6 +71,8 @@ struct tree_node * find_child_node(struct tree_node * node, int type){
     return NULL;
 }
 
+
+
 void pushs_arguments(struct tree_node * node){
     if(node == NULL) return;
 
@@ -77,6 +80,8 @@ void pushs_arguments(struct tree_node * node){
         pushs_arguments(node->next_sibling);
     }
     print_expression_node(node);
+    
+
     printf("PUSHS GF@_result\n");
 }
 
@@ -112,11 +117,21 @@ void inbody_scan_node(struct tree_node * node){
     case WHILE:
         print_while_node(node);
         break;
+    case EXPRESSION:
+        print_expression_node(node);
+    case DEFVAR: //TODO: DEFVAR
+        print_defvar_node(node);
+
     default:
         break;
     }
 }
 
+void print_defvar_node(struct tree_node * defvar_node){
+    for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
+        printf("DEFVAR LF@%s\n",node->value);
+    }
+}
 
 void print_body_node(struct tree_node * body){
     if(body == NULL) return;
@@ -125,6 +140,42 @@ void print_body_node(struct tree_node * body){
     }
 }
 
+
+void parameter_check_jump(int type){
+//value of TYPE is in the GF@_tmp
+switch (type)
+{
+case INT_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
+    break;
+case FLOAT_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@float\n");
+    break;
+case STR_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
+    break;
+case NULL_PARAMETER: 
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@nil\n");
+    break;
+case INT_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@string\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@float\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+case FLOAT_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@int\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@string\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+case STR_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@int\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@float\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+default:
+    break;
+}
+}
 
 void print_decfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;
@@ -142,6 +193,9 @@ void print_decfunc_node(struct tree_node * node){
     for(struct tree_node * argument = find_child_node(node, PARAMETERS)->head_child;argument!=NULL;argument=argument->next_sibling){
         printf("DEFVAR LF@%s\n",argument->data->value);
         printf("POPS LF@%s\n",argument->data->value);
+        
+        printf("TYPE GF@_tmp LF@%s\n",argument->data->value);
+        parameter_check_jump(argument->data->type);
     }
 
     //do body
@@ -177,6 +231,8 @@ void print_strlen(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
+        printf("TYPE GF@_tmp GF@_result\n"); //check for parameter type
+        printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
     printf("STRLEN GF@_result GF@_result\n");
 }
 //void ord(struct tree_node * node) is normal function
@@ -184,6 +240,8 @@ void print_chr(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
+        printf("TYPE GF@_tmp GF@_result\n"); // check for parameter type
+        printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
     printf("INT2CHAR GF@_result GF@_result\n");
 }
 
@@ -305,24 +363,44 @@ void postorder(struct tree_node * node){
     }
 }
 
+void nor_string_bool(){
+        printf("POPS GF@_op1\n");
+        printf("POPS GF@_op2\n");
+        printf("TYPE GF@_tmp GF@_op1\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@string\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@bool\n");
+        printf("TYPE GF@_tmp GF@_op1\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@string\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@bool\n");
+        printf("PUSHS GF@_op2\n");
+        printf("PUSHS GF@_op1\n");
+
+}
+
 void print_operator(int type){
     if(type == PLUS_OPERATOR){
+        nor_string_bool();
         printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("ADDS\n");
     }
     else if(type == MINUS_OPERATOR){
+        nor_string_bool();
         printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("SUBS\n");
     }
     else if(type == MULTIPLICATION_OPERATOR){
+        //check for type compatibility
+        nor_string_bool();
         printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("MULS\n");
     }
     else if(type == DIVISION_OPERATOR){
         // both operands to float
+        nor_string_bool();
+
         printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("CALL floatval\n");
@@ -375,6 +453,8 @@ void choose_expr_print(struct tree_node * node){
     //operand but variable
     if(node->data->type == VAR_OPERAND){
         //print push variable
+        printf("TYPE GF@_result LF@%s\n");
+        printf("JUMPIFEQ !ERROR5 GF@_result string@\n");
         printf("PUSHS LF@%s\n",node->data->value);
     }
     //int
@@ -692,6 +772,7 @@ void print_floatval(){
     printf("JUMPIFEQ !float_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !float_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !float_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !float_val_bool GF@_tmp string@bool\n");
 
     printf("LABEL !float_val_float \n");
     printf("RETURN\n");
@@ -701,9 +782,13 @@ void print_floatval(){
     printf("RETURN\n");
 
     printf("LABEL !float_val_string \n");
-   // printf("STRING2FLOAT GF@_result GF@_result\n");
-   //EXTENSION 
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
+
+    printf("LABEL !float_val_bool \n");
+    printf("JUMP !ERROR7\n");
+    printf("RETURN\n");
+
 
     printf("LABEL !float_val_int \n");
     printf("INT2FLOAT GF@_result GF@_result \n");
@@ -764,6 +849,8 @@ void print_intval(){
     printf("JUMPIFEQ !int_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !int_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !int_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !int_val_bool GF@_tmp string@bool\n");
+
 
     printf("LABEL !int_val_int \n");
     printf("RETURN\n");
@@ -773,10 +860,13 @@ void print_intval(){
     printf("RETURN\n");
 
     printf("LABEL !int_val_string \n");
-
-    //printf("STRING2INT GF@_result GF@_result\n");
-    //extension
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
+
+    printf("LABEL !int_val_bool \n");
+    printf("JUMP !ERROR7\n");
+    printf("RETURN\n");
+
 
     printf("LABEL !int_val_float \n");
     printf("FLOAT2INT GF@_result GF@_result \n");
@@ -797,6 +887,8 @@ void print_strval(){
     printf("JUMPIFEQ !str_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !str_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !str_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !str_val_bool GF@_tmp string@bool\n");
+
 
     printf("LABEL !str_val_string \n");
     printf("RETURN\n");
@@ -805,11 +897,18 @@ void print_strval(){
     printf("MOVE GF@_result string@\n");
     printf("RETURN\n");
 /* zbytek je rozsireni*/
-    printf("LABEL !str_val_int\n"); 
+    printf("LABEL !str_val_int\n");
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
 
-    printf("LABEL !str_val_float\n"); 
+    printf("LABEL !str_val_float\n");
+    printf("JUMP !ERROR7\n"); 
     printf("RETURN\n");
+
+    printf("LABEL !str_val_bool\n");
+    printf("JUMP !ERROR7\n"); 
+    printf("RETURN\n");
+
 /**/
     printf("LABEL !str_val_end\n");
     printf("LABEL !skipstr_val\n");
@@ -819,6 +918,9 @@ void print_ord(){
     printf("JUMP !skipord\n");
     printf("LABEL ord\n");
     printf("POPS GF@_result\n");
+
+    printf("TYPE GF@_tmp GF@_result\n");
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
 
 
     printf("JUMPIFEQ !ord_empty GF@_result string@\n"); //check if string is empty
@@ -844,13 +946,20 @@ void print_substring(){
 
     printf("DEFVAR TF@%s\n","string");
     printf("POPS TF@%s\n","string");
+    printf("TYPE GF@_tmp TF@string\n");//check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
 
 
     printf("DEFVAR TF@%s\n","start");
     printf("POPS TF@%s\n","start");
+    printf("TYPE GF@_tmp TF@start\n"); // check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
+
 
     printf("DEFVAR TF@%s\n","end");
     printf("POPS TF@%s\n","end");
+    printf("TYPE GF@_tmp TF@end\n"); // check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
 
 
     printf("DEFVAR TF@%s\n","counter");
@@ -937,7 +1046,7 @@ void definition_null2int(){
 
 }
 
-//TODO: UGLY FIX
+//TODO: UGLY FIX part1
 
 void move_assign(struct tree_node * original_node, int count){
     original_node->data->type=ASSIGN;
@@ -986,7 +1095,7 @@ void tree_traversal(struct tree_node * node, int count){
 
 
 void code_generator(struct tree_node * node){
-    //TODO: UGLY FIX
+    //TODO: UGLY FIX part2
     tree_traversal(node,0);
     print_init_code();
 
@@ -1026,6 +1135,18 @@ void code_generator(struct tree_node * node){
 
     printf("CLEARS\n");
     printf("EXIT int@0\n");
+    
+
+    printf("LABEL !ERROR4\n");
+    printf("EXIT int@4\n");
+
+    printf("LABEL !ERROR5\n");
+    printf("EXIT int@5\n");
+
+    printf("LABEL !ERROR7\n");
+    printf("EXIT int@5\n");
+
+
     //TODO:
     //potom asi to ma delat neco na konci?? asi nějaký return
 }
