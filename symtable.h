@@ -65,7 +65,7 @@ htab_pair_t *symtable_find(struct symtable *t, htab_key_t key);
  * @param htab_key_t key
  * @return htab_pair_t *
  */
-htab_pair_t *symtable_add(struct symtable *t, htab_key_t key);
+htab_pair_t *symtable_add(struct symtable *t, htab_key_t key, value_t *(*value_create)());
 
 /**
  * @brief Searches whole stack
@@ -75,4 +75,4 @@ htab_pair_t *symtable_add(struct symtable *t, htab_key_t key);
  * @return htab_pair_t*
  */
 htab_pair_t *symtable_search_all(struct symtable *t, htab_key_t key);
-#endif  // __SYMTABLE_H__
+#endif // __SYMTABLE_H__

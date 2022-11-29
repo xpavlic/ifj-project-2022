@@ -48,16 +48,18 @@ void symtable_free(struct symtable *t) {
 htab_pair_t *symtable_find(struct symtable *t, htab_key_t key) {
     if (t == NULL) return NULL;
     htab_pair_t *found_value = NULL;
-    for (struct symtable_item *node = t->head; node != NULL;
-         node = node->next) {
-        found_value = htab_find(node->hash_table, key);
-        if (found_value != NULL) return found_value;
+    struct symtable_item *node = t->head;
+    if (node == NULL) {
+        return NULL;
     }
+    found_value = htab_find(node->hash_table, key);
+    if (found_value != NULL) return found_value;
+
     return NULL;
 }
 
-htab_pair_t *symtable_add(struct symtable *t, htab_key_t key) {
+htab_pair_t *symtable_add(struct symtable *t, htab_key_t key, value_t *(*value_create)()) {
     if (t == NULL) return NULL;
     if (t->head == NULL) symtable_add_frame(t);
-    return htab_lookup_add(t->head->hash_table, key);
+    return htab_lookup_add(t->head->hash_table, key, value_create);
 }

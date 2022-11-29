@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key) {
+htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key, value_t *(*value_create)()) {
     if (t == NULL || key == NULL) return NULL;
     size_t position = (htab_hash_function(key) % t->arr_size);
     htab_item_t *last = NULL;
@@ -23,7 +23,7 @@ htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key) {
     // setup new item
     strcpy((char *)newitem->data.key, (char *)key);
     newitem->next = NULL;
-    newitem->data.value = value_init();
+    newitem->data.value = (*value_create)();
 
     // place new item do seznamu
     if (t->arr_ptr[position] == NULL) {
@@ -146,7 +146,7 @@ void htab_resize(htab_t *t, size_t newn) // změna velikosti pole
         start = t->arr_ptr[i];
         // through seznam
         for (htab_item_t *j = start; j != NULL; j = j->next) {
-            change = htab_lookup_add(newt, j->data.key);
+            change = htab_lookup_add(newt, j->data.key, &value_create_null);
             change->value = j->data.value;
         }
     }
@@ -168,16 +168,28 @@ size_t htab_size(const htab_t *t) // počet záznamů v tabulce
 
 void nope(void) {} // does nothing
 
-value_t *value_init() {
+value_t *value_create_fnc() {
     value_t *ptr = (value_t *)malloc(sizeof(value_t));
     if (ptr == NULL) {
         return NULL;
     }
-    ptr->array = (enum tree_node_type *)malloc(sizeof(int));
-    if (ptr->array == NULL) {
+    ptr->type = value_fnc;
+    value_fnc_t *fn = &ptr->val.fnc;
+    fn->parameters = NULL;
+    fn->number_of_parameters = 0;
+    fn->return_type = "void";
+    return ptr;
+}
+
+value_t *value_create_var() {
+    value_t *ptr = (value_t *)malloc(sizeof(value_t));
+    if (ptr == NULL) {
         return NULL;
     }
-    ptr->number_of_parameters = 0;
-    ptr->return_type = 0;
+    ptr->type = value_var;
+    ptr->val.var.var_type = T_NO_TYPE;
     return ptr;
+}
+value_t *value_create_null() {
+    return NULL;
 }
