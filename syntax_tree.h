@@ -58,7 +58,9 @@ enum tree_node_type {
     INT_NULL_PARAMETER,
     FLOAT_NULL_PARAMETER,
 
-    ARGUMENT, // TO DELETE, instead use 'terminal'/VAR_OPERAND
+    VARIABLES,
+    T_VOID,
+    T_NO_TYPE,
 
 };
 
