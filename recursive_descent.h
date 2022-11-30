@@ -19,7 +19,8 @@ typedef struct {
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 
-int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while, struct tree_node *tree);
+int analyse_expression(FILE *input_file, Token_stack *token_stack, int if_while, struct tree_node *tree,
+                       int spec_expression);
 
 int analyse_arg(FILE *input_file, Token_stack *token_stack, struct tree_node *arg_body);
 
