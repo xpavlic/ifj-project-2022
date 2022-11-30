@@ -119,9 +119,10 @@ void inbody_scan_node(struct tree_node * node){
         break;
     case EXPRESSION:
         print_expression_node(node);
-    case DEFVAR: //TODO: DEFVAR
+        break;
+    case VARIABLES: //TODO: DEFVAR
         print_defvar_node(node);
-
+        break;
     default:
         break;
     }
@@ -498,7 +499,7 @@ void choose_expr_print(struct tree_node * node){
     //operand but variable
     if(node->data->type == VAR_OPERAND){
         //print push variable
-        printf("TYPE GF@_result LF@%s\n");
+        printf("TYPE GF@_result LF@%s\n",node->data->value);
         printf("JUMPIFEQ !ERROR5 GF@_result string@\n");
         printf("PUSHS LF@%s\n",node->data->value);
     }
