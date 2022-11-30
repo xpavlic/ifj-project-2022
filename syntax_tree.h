@@ -22,6 +22,7 @@ enum tree_node_type{
     RETURN, // null
     FUNC_DEC, // null
     FUNC_CALL, // null
+    VARIABLES, // null - for list of later used variable
 
     OPERATOR, // string
 
