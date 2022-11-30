@@ -119,7 +119,7 @@ void inbody_scan_node(struct tree_node * node){
         break;
     case EXPRESSION:
         print_expression_node(node);
-    case DEFVAR: //TODO: DEFVAR
+    case VARIABLES: //TODO: DEFVAR
         print_defvar_node(node);
 
     default:
