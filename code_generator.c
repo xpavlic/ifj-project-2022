@@ -129,7 +129,7 @@ void inbody_scan_node(struct tree_node * node){
 
 void print_defvar_node(struct tree_node * defvar_node){
     for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
-        printf("DEFVAR LF@%s\n",node->value);
+        printf("DEFVAR LF@%s\n",node->data->value);
     }
 }
 
@@ -273,6 +273,47 @@ void print_callfunc_node(struct tree_node * node){
 }
 
 
+void check_returned_value(struct tree_node * return_type_node){
+    printf("TYPE GF@_tmp GF@_result\n");
+    //int
+    if(!strcmp("int",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@int GF@_tmp\n");
+    }
+    //float
+    else if(!strcmp("float",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@float GF@_tmp\n");
+    }
+    //string
+    else if(!strcmp("string",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@string GF@_tmp\n");
+    }
+    //void
+    else if(!strcmp("void",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@nil GF@_tmp\n");
+    }
+    //?int
+    else if(!strcmp("?int",return_type_node->data->value)){
+        //printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+    else if(!strcmp("?float",return_type_node->data->value)){
+        printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        //printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+    else if(!strcmp("?string",return_type_node->data->value)){
+        printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        //printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+
+
+}
+
 void print_general_callfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;    
     //move every argumentu into stack
@@ -280,7 +321,11 @@ void print_general_callfunc_node(struct tree_node * node){
 
     //call function
     printf("CALL %s\n",func_name);
-
+    //TODO: check for return
+    struct tree_node * return_type_node = find_child_node(node,(int)TYPE);
+    if(return_type_node == NULL)
+        return;
+    check_returned_value(return_type_node);
 }
 
 
