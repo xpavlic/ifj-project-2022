@@ -262,7 +262,7 @@ enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable
         if (result_state != OK) break;
     }
     if (result_state == OK) {
-        struct tree_node *new_node = add_tree_node(node, VARIABLES, "");
+        struct tree_node *new_node = add_tree_node(node->tail_child, VARIABLES, "list_of_variables");
         if (new_node == NULL) return INTERNAL_ERROR;
         htab_item_t *start;
         for (size_t i = 0; i < symtable->head->hash_table->arr_size && result_state == OK; i++) {
