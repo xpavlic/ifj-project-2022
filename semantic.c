@@ -114,12 +114,12 @@ void print_table(symtable_t *symtable) {
     struct htab *hash_table = symtable->head->hash_table;
     htab_item_t **tmp = hash_table->arr_ptr;
     for (size_t i = 0; i < hash_table->arr_size; i++) {
-        fprintf(stderr, "-%ld- ", i);
+        printf("-%ld- ", i);
         for (htab_item_t *tmp1 = tmp[i]; tmp1 != NULL; tmp1 = tmp1->next) {
             if (VALUE((&(tmp1->data)))->type == value_fnc) {
                 printf(" %s[type: %d]{", tmp1->data.key, VALUE((&(tmp1->data)))->type);
                 for (size_t i = 0; i < VALUE((&(tmp1->data)))->val.fnc.number_of_parameters; i++) {
-                    fprintf(stderr, "%s ", VALUE((&(tmp1->data)))->val.fnc.parameters[i]);
+                    printf("%s ", VALUE((&(tmp1->data)))->val.fnc.parameters[i]);
                 }
                 printf("}{RETURN: %s}", VALUE((&(tmp1->data)))->val.fnc.return_type);
 
@@ -127,7 +127,7 @@ void print_table(symtable_t *symtable) {
                 printf(" %s[type: %d]", tmp1->data.key, VALUE((&(tmp1->data)))->type);
             }
         }
-        fprintf(stderr, "\n");
+        printf("\n");
     }
 }
 
@@ -210,7 +210,6 @@ enum error_state check_arguments(symtable_t *symtable, struct tree_node *node, h
 enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *body_node) {
     enum error_state result_state = OK;
     for (struct tree_node *tmp = body_node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
-        fprintf(stderr, "%s ->", tmp->data->value);
         switch (tmp->data->type) {
         case ASSIGN:
             result_state = traverse_assign(fnc_symtable, symtable, tmp);

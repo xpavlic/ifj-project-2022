@@ -57,8 +57,6 @@ enum tree_node_type {
     STR_NULL_PARAMETER,
     INT_NULL_PARAMETER,
     FLOAT_NULL_PARAMETER,
-
-    VARIABLES,
     T_VOID,
     T_NO_TYPE,
 
