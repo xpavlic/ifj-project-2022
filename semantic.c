@@ -47,6 +47,10 @@ enum error_state semantic_analysis(struct tree_node *node) {
 
     result_state = traverse_body(fnc_symtable, symtable, node);
 
+    if (result_state == OK) {
+        result_state = add_variables_node(symtable, node);
+    }
+
     symtable_free(symtable);
     symtable_free(fnc_symtable);
     return result_state;
@@ -55,6 +59,21 @@ enum error_state semantic_analysis(struct tree_node *node) {
 /* ------------------------------------------------------------- */
 /*                      Auxiliary Functions                      */
 /* ------------------------------------------------------------- */
+
+enum error_state add_variables_node(symtable_t *symtable, struct tree_node *node) {
+    enum error_state result_state = OK;
+    struct tree_node *new_node = add_tree_node(node->tail_child, VARIABLES, "list_of_variables");
+    if (new_node == NULL) return INTERNAL_ERROR;
+    htab_item_t *start;
+    for (size_t i = 0; i < symtable->head->hash_table->arr_size && result_state == OK; i++) {
+        start = symtable->head->hash_table->arr_ptr[i];
+        for (htab_item_t *j = start; j != NULL && result_state == OK; j = j->next) {
+            struct tree_node *new_var_node = add_tree_node(new_node, VAR_OPERAND, j->data.key);
+            if (new_var_node == NULL) result_state = INTERNAL_ERROR;
+        }
+    }
+    return result_state;
+}
 
 void value_t_free(void *toBeDeleted) {
     if (((value_t *)toBeDeleted)->type == value_fnc) {
@@ -214,9 +233,6 @@ enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, s
         case ASSIGN:
             result_state = traverse_assign(fnc_symtable, symtable, tmp);
             break;
-        case FIRST_ASSIGN:
-            result_state = traverse_first_assign(fnc_symtable, symtable, tmp);
-            break;
         case IF:
             result_state = traverse_if(fnc_symtable, symtable, tmp);
             break;
@@ -231,9 +247,6 @@ enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, s
             break;
         case EXPRESSION:
             result_state = traverse_expression(symtable, tmp);
-            break;
-        case RETURN:
-            result_state = traverse_return(fnc_symtable, symtable, tmp);
             break;
         default:
             break;
@@ -261,16 +274,7 @@ enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable
         if (result_state != OK) break;
     }
     if (result_state == OK) {
-        struct tree_node *new_node = add_tree_node(node->tail_child, VARIABLES, "list_of_variables");
-        if (new_node == NULL) return INTERNAL_ERROR;
-        htab_item_t *start;
-        for (size_t i = 0; i < symtable->head->hash_table->arr_size && result_state == OK; i++) {
-            start = symtable->head->hash_table->arr_ptr[i];
-            for (htab_item_t *j = start; j != NULL && result_state == OK; j = j->next) {
-                struct tree_node *new_var_node = add_tree_node(new_node, VAR_OPERAND, j->data.key);
-                if (new_var_node == NULL) result_state = INTERNAL_ERROR;
-            }
-        }
+        result_state = add_variables_node(symtable, node);
     }
 
     symtable_remove_frame(symtable);
@@ -282,39 +286,20 @@ enum error_state traverse_assign(symtable_t *fnc_symtable, symtable_t *symtable,
     htab_pair_t *var = symtable_find(symtable, node->head_child->data->value);
     /*  Malo by byt FIRST ASSIGN, premenna este nie je v ramci*/
     if (var == NULL) {
-        node->data = add_tn_data(node, FIRST_ASSIGN, "first_assign");
-        result_state = traverse_first_assign(fnc_symtable, symtable, node);
-    } else {
-        switch (node->tail_child->data->type) {
-        case EXPRESSION:
-            result_state = traverse_expression(symtable, node->tail_child);
-            break;
-        case FUNC_CALL:
-            result_state = traverse_func_call(fnc_symtable, symtable, node->tail_child);
-            break;
-        default:
-            break;
+        var = symtable_add(symtable, node->head_child->data->value, &value_create_var);
+        if (var == NULL) {
+            return INTERNAL_ERROR;
         }
     }
-    return result_state;
-}
-
-enum error_state traverse_first_assign(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node) {
-    enum error_state result_state = OK;
-    htab_pair_t *var = symtable_add(symtable, node->head_child->data->value, &value_create_var);
-    if (var == NULL) {
-        result_state = INTERNAL_ERROR;
-    } else {
-        switch (node->tail_child->data->type) {
-        case EXPRESSION:
-            result_state = traverse_expression(symtable, node->tail_child);
-            break;
-        case FUNC_CALL:
-            result_state = traverse_func_call(fnc_symtable, symtable, node->tail_child);
-            break;
-        default:
-            break;
-        }
+    switch (node->tail_child->data->type) {
+    case EXPRESSION:
+        result_state = traverse_expression(symtable, node->tail_child);
+        break;
+    case FUNC_CALL:
+        result_state = traverse_func_call(fnc_symtable, symtable, node->tail_child);
+        break;
+    default:
+        break;
     }
     return result_state;
 }
@@ -449,10 +434,5 @@ enum error_state traverse_while(symtable_t *fnc_symtable, symtable_t *symtable, 
         }
         if (result_state != OK) return result_state;
     }
-    return result_state;
-}
-
-enum error_state traverse_return(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node) {
-    enum error_state result_state = OK;
     return result_state;
 }

@@ -36,6 +36,15 @@ enum error_state semantic_analysis(struct tree_node *node);
 /* ------------------------------------------------------------- */
 
 /**
+ * @brief Creates and fills VARIABLES node in AST
+ * 
+ * @param symtable 
+ * @param node 
+ * @return enum error_state 
+ */
+enum error_state add_variables_node(symtable_t *symtable, struct tree_node *node);
+
+/**
  * @brief value_t destructor
  *
  * @param toBeDeleted
@@ -137,16 +146,6 @@ enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable
 enum error_state traverse_assign(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node);
 
 /**
- * @brief Traverses FIRTS_ASSIGN node
- *
- * @param fnc_symtable
- * @param symtable
- * @param node
- * @return enum error_state
- */
-enum error_state traverse_first_assign(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node);
-
-/**
  * @brief Traverses EXPRESSION node
  *
  * @param symtable
@@ -202,13 +201,3 @@ enum error_state traverse_if(symtable_t *fnc_symtable, symtable_t *symtable, str
  * @return enum error_state
  */
 enum error_state traverse_while(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node);
-
-/**
- * @brief Traverses RETURN node
- *
- * @param fnc_symtable
- * @param symtable
- * @param node
- * @return enum error_state
- */
-enum error_state traverse_return(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node);
