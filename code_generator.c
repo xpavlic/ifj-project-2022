@@ -105,9 +105,9 @@ void inbody_scan_node(struct tree_node * node){
     case ASSIGN:
         print_assaign_node(node);
         break;
-    case FIRST_ASSIGN:
-        print_first_assign_node(node);
-        break;
+    //case FIRST_ASSIGN:
+    //    print_first_assign_node(node);
+    //    break;
     case RETURN:
         print_return_node(node);
         break;
@@ -120,15 +120,17 @@ void inbody_scan_node(struct tree_node * node){
     case EXPRESSION:
         print_expression_node(node);
         break;
-    case VARIABLES: //TODO: DEFVAR
-        print_defvar_node(node);
-        break;
+    //Variables are at the end of body ://
+    //case VARIABLES: //TODO: DEFVAR
+    //    print_defvar_node(node);
+    //    break;
     default:
         break;
     }
 }
 
 void print_defvar_node(struct tree_node * defvar_node){
+    if(defvar_node == NULL)return;
     for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
         printf("DEFVAR LF@%s\n",node->data->value);
     }
@@ -136,6 +138,7 @@ void print_defvar_node(struct tree_node * defvar_node){
 
 void print_body_node(struct tree_node * body){
     if(body == NULL) return;
+    print_defvar_node(find_child_node(body,VARIABLES));
     for(struct tree_node * child_node = body->head_child;child_node!=NULL;child_node=child_node->next_sibling){
         inbody_scan_node(child_node);
     }
