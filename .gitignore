@@ -62,3 +62,6 @@ ast.c
 ast.h
 test.txt
 main
+ic22int
+input.txt
+output.txt

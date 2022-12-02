@@ -59,7 +59,8 @@ enum error_state semantic_analysis(struct tree_node *node) {
     if (result_state != OK) {
         FREE_AND_RETURN
     }
-
+    #define NDEBUG if(0)
+    NDEBUG print_table(fnc_symtable);
     /* Spracovanie tela programu */
     result_state = traverse_body(fnc_symtable, symtable, node, "main");
 

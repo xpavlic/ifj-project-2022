@@ -3,6 +3,7 @@
 //
 
 #include "recursive_descent.h"
+#include "code_generator.h"
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack) {
     Token token;
@@ -465,16 +466,17 @@ int analyse_syntax(FILE *input_file) {
     DEBUG printf("AST\n");
     DEBUG printf("root: ");
     print_tree(tree, 0);
-    printf("result: %i\n", result);
+    DEBUG printf("result: %i\n", result);
     if (result == 0) {
         result = semantic_analysis(tree);
        DEBUG printf("AFTER SEMANTIC TREE\n");
         DEBUG printf("root: ");
         print_tree(tree, 0);
     }
-    printf("result: %i\n", result);
+    DEBUG printf("result: %i\n", result);
     if (result == 0) {
         // call generator
+        code_generator(tree);
     }
 
     /*printf("%s\n", tree->data->value);

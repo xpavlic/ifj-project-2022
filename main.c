@@ -9,7 +9,9 @@
 
 int main(void) {
     int result = analyse_syntax(stdin);
-    printf("program return code: %i\n", result);
+    #define NDEBUG if(0)
+    NDEBUG printf("program return code: %i\n", result);
+    
     /*Token token;
     init_str(&token.val);
     get_token(stdin, &token);
