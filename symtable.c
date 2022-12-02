@@ -4,6 +4,9 @@
 
 struct symtable *symtable_init(void (*func)(void *)) {
     struct symtable *ptr = malloc(sizeof(struct symtable));
+    if (ptr == NULL) {
+        return NULL;
+    }
     ptr->count = 0;
     ptr->head = NULL;
     ptr->free_func = func;
@@ -17,6 +20,7 @@ void symtable_add_frame(struct symtable *t) {
     t->count++;
     symtable_item_t *tmp = t->head;
     t->head = malloc(sizeof(symtable_item_t));
+    if (t->head == NULL) return;
     t->head->next = tmp;
 
     t->head->hash_table = htab_init(HTAB_INIT_VALUE);
