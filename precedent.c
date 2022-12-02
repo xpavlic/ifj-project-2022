@@ -88,7 +88,8 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
     Token_stack posfix_stack;
 
     int prev_token_eval = evaluate_token(first_token, if_while);
-    if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT) {
+    if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT || prev_token_eval == PRIO_MUL ||
+        prev_token_eval == PRIO_PLUS || prev_token_eval == PRIO_BIGGER) {
         return 2;
     }
 
@@ -96,8 +97,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
     init_token_stack(&token_stack);
 
     if (pre_first_token != NULL) {
-        if (prev_token_eval != PRIO_MUL && prev_token_eval != PRIO_PLUS && prev_token_eval != PRIO_BIGGER &&
-            prev_token_eval != PRIO_EQUAL && prev_token_eval != EXP_END) {
+        if (prev_token_eval != PRIO_EQUAL && prev_token_eval != EXP_END) {
             return 2;
         }
         if (prev_token_eval != EXP_END) {
