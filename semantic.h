@@ -1,7 +1,12 @@
-#include "structs.c"
+/**
+ * @project Compiler IFJ22
+ * @file    semantic.h
+ * @authors  Matej Vadovič <xvadov01>
+ */
+
+#pragma once
 #include "symtable.h"
 #include "syntax_tree.h"
-#include <assert.h>
 
 enum error_state {
     OK = 0,
@@ -37,10 +42,10 @@ enum error_state semantic_analysis(struct tree_node *node);
 
 /**
  * @brief Creates and fills VARIABLES node in AST
- * 
- * @param symtable 
- * @param node 
- * @return enum error_state 
+ *
+ * @param symtable
+ * @param node
+ * @return enum error_state
  */
 enum error_state add_variables_node(symtable_t *symtable, struct tree_node *node);
 
@@ -117,14 +122,14 @@ enum error_state check_arguments(symtable_t *symtable, struct tree_node *node, h
 
 /**
  * @brief Traverses BODY node
- * 
- * @param fnc_symtable 
- * @param symtable 
- * @param body_node 
- * @param fnc_name 
- * @return enum error_state 
+ *
+ * @param fnc_symtable
+ * @param symtable
+ * @param body_node
+ * @param fnc_name
+ * @return enum error_state
  */
-enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *body_node , char * fnc_name);
+enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *body_node, char *fnc_name);
 
 /**
  * @brief Traverses FNC_DEC node
@@ -185,32 +190,32 @@ enum error_state traverse_operand(symtable_t *symtable, struct tree_node *node);
 
 /**
  * @brief Traverses IF node
- * 
- * @param fnc_symtable 
- * @param symtable 
- * @param node 
- * @param fnc_name 
- * @return enum error_state 
+ *
+ * @param fnc_symtable
+ * @param symtable
+ * @param node
+ * @param fnc_name
+ * @return enum error_state
  */
-enum error_state traverse_if(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node, char * fnc_name);
+enum error_state traverse_if(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node, char *fnc_name);
 
 /**
  * @brief Traverses WHILE node
- * 
- * @param fnc_symtable 
- * @param symtable 
- * @param node 
- * @param fnc_name 
- * @return enum error_state 
+ *
+ * @param fnc_symtable
+ * @param symtable
+ * @param node
+ * @param fnc_name
+ * @return enum error_state
  */
-enum error_state traverse_while(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node, char * fnc_name);
+enum error_state traverse_while(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node, char *fnc_name);
 
 /**
  * @brief Traverse RETURN node
- * 
- * @param fnc_symtable 
- * @param node 
- * @param fnc_name 
- * @return enum error_state 
+ *
+ * @param fnc_symtable
+ * @param node
+ * @param fnc_name
+ * @return enum error_state
  */
-enum error_state traverse_return(symtable_t *fnc_symtable, struct tree_node *node, char * fnc_name);
+enum error_state traverse_return(symtable_t *fnc_symtable, struct tree_node *node, char *fnc_name);
