@@ -280,7 +280,7 @@ enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, s
 
 enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node) {
     enum error_state result_state = OK;
-    if(symtable_add_frame(symtable)){
+    if (symtable_add_frame(symtable)) {
         return INTERNAL_ERROR;
     }
     if (symtable->head == NULL) return INTERNAL_ERROR;
@@ -410,7 +410,7 @@ enum error_state traverse_operand(symtable_t *symtable, struct tree_node *node) 
     case BIGGER_OPERATOR:
     case SMALLER_EQUAL_OPERATOR:
     case BIGGER_EQUAL_OPERATOR:
-        result_state = TYPE_COMPATIBILITY_ERROR;
+        result_state = OTHER_SEM_ERROR;
         break;
     case PLUS_OPERATOR:
     case MINUS_OPERATOR:
