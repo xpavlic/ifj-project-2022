@@ -9,6 +9,7 @@
 #include "scanner.h"
 #include "syntax_tree.h"
 #include "precedent.h"
+#include "semantic.h"
 
 int get_token_rec(FILE *input_file, Token_stack *token_stack);
 
@@ -28,6 +29,8 @@ int analyse_body(FILE *input_file, Token_stack *token_stack, struct tree_node *b
 int analyse_prog(FILE *input_file, Token_stack *token_stack, struct tree_node *root_node);
 
 int analyse_prolog(FILE *input_file, Token_stack *token_stack, struct tree_node *tree);
+
+void print_tree(struct tree_node *root, int level);
 
 int analyse_syntax(FILE *input_file);
 

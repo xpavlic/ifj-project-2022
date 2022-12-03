@@ -13,6 +13,7 @@ void print_general_callfunc_node(struct tree_node * node);
 void print_callfunc_node(struct tree_node * node);
 void print_decfunc_node(struct tree_node * node);
 void print_body_node(struct tree_node * body);
+void print_defvar_node(struct tree_node * body);
 
 // EXPRESSION NODE HANDLING + everything similar to expression 
 void print_string_for_expression(char * string);
@@ -70,11 +71,17 @@ struct tree_node * find_child_node(struct tree_node * node, int type){
     return NULL;
 }
 
+
+
 void pushs_arguments(struct tree_node * node){
+    if(node == NULL) return;
+
     if (node->next_sibling!=NULL){
         pushs_arguments(node->next_sibling);
     }
     print_expression_node(node);
+    
+
     printf("PUSHS GF@_result\n");
 }
 
@@ -98,9 +105,9 @@ void inbody_scan_node(struct tree_node * node){
     case ASSIGN:
         print_assaign_node(node);
         break;
-    case FIRST_ASSIGN:
-        print_first_assign_node(node);
-        break;
+    //case FIRST_ASSIGN:
+    //    print_first_assign_node(node);
+    //    break;
     case RETURN:
         print_return_node(node);
         break;
@@ -110,19 +117,85 @@ void inbody_scan_node(struct tree_node * node){
     case WHILE:
         print_while_node(node);
         break;
+    case EXPRESSION:
+        print_expression_node(node);
+        break;
+    //Variables are at the end of body ://
+    //case VARIABLES: //TODO: DEFVAR
+    //    print_defvar_node(node);
+    //    break;
     default:
         break;
+    }
+}
+
+void print_defvar_node(struct tree_node * defvar_node){
+    if(defvar_node == NULL)return;
+    //TODO: UGLY FIX
+
+    for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
+        if(defvar_node->parent->parent == NULL || find_child_node(defvar_node->parent->parent,PARAMETERS) == NULL){
+            printf("DEFVAR LF@%s\n",node->data->value);
+            continue;
+        }
+        else{
+            
+            for(struct tree_node * parameter = find_child_node(defvar_node->parent->parent,PARAMETERS)->head_child;parameter!=NULL;parameter=parameter->next_sibling){
+                if(!strcmp(node->data->value,parameter->data->value))
+                    break;
+                if(parameter->next_sibling == NULL){
+                    printf("DEFVAR LF@%s\n",node->data->value);
+                }
+            }
+        }
     }
 }
 
 
 void print_body_node(struct tree_node * body){
     if(body == NULL) return;
+    print_defvar_node(find_child_node(body,VARIABLES));
     for(struct tree_node * child_node = body->head_child;child_node!=NULL;child_node=child_node->next_sibling){
         inbody_scan_node(child_node);
     }
 }
 
+
+void parameter_check_jump(int type){
+//value of TYPE is in the GF@_tmp
+switch (type)
+{
+case INT_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
+    break;
+case FLOAT_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@float\n");
+    break;
+case STR_PARAMETER:
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
+    break;
+case NULL_PARAMETER: 
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@nil\n");
+    break;
+case INT_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@string\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@float\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+case FLOAT_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@int\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@string\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+case STR_NULL_PARAMETER:
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@int\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@float\n");
+    printf("JUMPIFEQ !ERROR4 GF@_tmp string@bool\n");
+    break;
+default:
+    break;
+}
+}
 
 void print_decfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;
@@ -140,8 +213,10 @@ void print_decfunc_node(struct tree_node * node){
     for(struct tree_node * argument = find_child_node(node, PARAMETERS)->head_child;argument!=NULL;argument=argument->next_sibling){
         printf("DEFVAR LF@%s\n",argument->data->value);
         printf("POPS LF@%s\n",argument->data->value);
+        
+        printf("TYPE GF@_tmp LF@%s\n",argument->data->value);
+        parameter_check_jump(argument->data->type);
     }
-
 
     //do body
     print_body_node(find_child_node(node, BODY));
@@ -176,6 +251,8 @@ void print_strlen(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
+        printf("TYPE GF@_tmp GF@_result\n"); //check for parameter type
+        printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
     printf("STRLEN GF@_result GF@_result\n");
 }
 //void ord(struct tree_node * node) is normal function
@@ -183,6 +260,8 @@ void print_chr(struct tree_node * node){
     struct tree_node * arguments_node;
     arguments_node = find_child_node(node, ARGUMENTS);
     print_expression_node(arguments_node->head_child);
+        printf("TYPE GF@_tmp GF@_result\n"); // check for parameter type
+        printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
     printf("INT2CHAR GF@_result GF@_result\n");
 }
 
@@ -214,6 +293,47 @@ void print_callfunc_node(struct tree_node * node){
 }
 
 
+void check_returned_value(struct tree_node * return_type_node){
+    printf("TYPE GF@_tmp GF@_result\n");
+    //int
+    if(!strcmp("int",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@int GF@_tmp\n");
+    }
+    //float
+    else if(!strcmp("float",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@float GF@_tmp\n");
+    }
+    //string
+    else if(!strcmp("string",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@string GF@_tmp\n");
+    }
+    //void
+    else if(!strcmp("void",return_type_node->data->value)){
+        printf("JUMPIFNEQ !ERROR4 string@nil GF@_tmp\n");
+    }
+    //?int
+    else if(!strcmp("?int",return_type_node->data->value)){
+        //printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+    else if(!strcmp("?float",return_type_node->data->value)){
+        printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        //printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+    else if(!strcmp("?string",return_type_node->data->value)){
+        printf("JUMPIFEQ !ERROR4 string@int GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@float GF@_tmp\n");
+        //printf("JUMPIFEQ !ERROR4 string@string GF@_tmp\n");
+        printf("JUMPIFEQ !ERROR4 string@bool GF@_tmp\n");
+    }
+
+
+}
+
 void print_general_callfunc_node(struct tree_node * node){
     char * func_name = find_child_node(node, NAME)->data->value;    
     //move every argumentu into stack
@@ -221,7 +341,11 @@ void print_general_callfunc_node(struct tree_node * node){
 
     //call function
     printf("CALL %s\n",func_name);
-
+    //TODO: check for return
+    struct tree_node * return_type_node = find_child_node(node,(int)TYPE);
+    if(return_type_node == NULL)
+        return;
+    check_returned_value(return_type_node);
 }
 
 
@@ -244,11 +368,15 @@ void print_assaign_node(struct tree_node * node){
 }
 
 void print_if_node(struct tree_node * node){
-    static size_t counter = 0;
+    static size_t use_counter = 0;
+    size_t counter = ++use_counter;
     //VYHODNOTIT EXPRESSION
     print_expression_node(node->head_child);
+    //change to bool
+    printf("PUSHS GF@_result\n");
+    printf("CALL boolval\n");
     //JUMP conditional IF
-    printf("JUMPIFNEQ !IF%ld GF@_result 0\n",counter);
+    printf("JUMPIFNEQ !IF%ld GF@_result bool@false\n",counter);
     //JUMP ELSE
     printf("JUMP !ELSE%ld\n",counter);
     //LABEL IF
@@ -264,26 +392,32 @@ void print_if_node(struct tree_node * node){
     //LABEL ELSEEND
     printf("LABEL !ELSEEND%ld\n",counter);
 
-    counter++;
 }
 
 void print_while_node(struct tree_node * node){
-    static size_t counter = 0;
+    static size_t use_counter = 0;
+    use_counter++;
+    size_t counter = use_counter;
+
     //LABEL WHILE
     printf("LABEL !WHILE%ld\n",counter);
     //EVALUEATE EXPRESSION
     print_expression_node(node->head_child);
+    
+    //change to bool
+    printf("PUSHS GF@_result\n");
+    printf("CALL boolval\n");
     //JUMP CONDITIONAL END
-    printf("JUMPIFNEQ !WEND%ld GF@_result 0\n",counter);
+    printf("JUMPIFEQ !WEND%ld GF@_result bool@false\n",counter);
     //BODY
     print_body_node(node->tail_child);
     //JUMP WHILE
-    printf("LABEL !WHILE%ld\n",counter);
+    printf("JUMP !WHILE%ld\n",counter);
     //LABEL END
     printf("LABEL !WEND%ld\n",counter);
 
 
-    counter++;
+    
 }
 
 void postorder(struct tree_node * node){
@@ -294,21 +428,45 @@ void postorder(struct tree_node * node){
     }
 }
 
+void nor_string_bool(){
+        printf("POPS GF@_op1\n");
+        printf("POPS GF@_op2\n");
+        printf("TYPE GF@_tmp GF@_op1\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@string\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@bool\n");
+        printf("TYPE GF@_tmp GF@_op1\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@string\n");
+        printf("JUMPIFEQ !ERROR7 GF@_tmp string@bool\n");
+        printf("PUSHS GF@_op2\n");
+        printf("PUSHS GF@_op1\n");
+
+}
+
 void print_operator(int type){
     if(type == PLUS_OPERATOR){
+        nor_string_bool();
+        printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("ADDS\n");
     }
     else if(type == MINUS_OPERATOR){
+        nor_string_bool();
+        printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("SUBS\n");
     }
     else if(type == MULTIPLICATION_OPERATOR){
+        //check for type compatibility
+        nor_string_bool();
+        printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("MULS\n");
     }
     else if(type == DIVISION_OPERATOR){
         // both operands to float
+        nor_string_bool();
+
+        printf("CALL !null2int\n");
         printf("CALL !int_to_float\n");
         printf("CALL floatval\n");
         printf("MOVE GF@_op2 GF@_result\n");
@@ -360,6 +518,8 @@ void choose_expr_print(struct tree_node * node){
     //operand but variable
     if(node->data->type == VAR_OPERAND){
         //print push variable
+        printf("TYPE GF@_result LF@%s\n",node->data->value);
+        printf("JUMPIFEQ !ERROR5 GF@_result string@\n");
         printf("PUSHS LF@%s\n",node->data->value);
     }
     //int
@@ -369,7 +529,7 @@ void choose_expr_print(struct tree_node * node){
     //float
     else if(node->data->type == T_FLOAT){
         //print push variable
-        float float_number = strtof (node->data->value, NULL);
+        double float_number = strtod (node->data->value, NULL);
         printf("PUSHS float@%a\n",float_number);
     }
     //string
@@ -380,7 +540,13 @@ void choose_expr_print(struct tree_node * node){
     }
     //null
     else if(node->data->type == T_NULL){ 
-        printf("PUSHS nil@nil\n");
+        //TODO:temporary fix
+        if(!strcmp(node->data->value,"===")){
+            printf("CALL !EQS\n");
+        }
+        else{
+            printf("PUSHS nil@nil\n");
+        }
     }
     //operator
     else{
@@ -389,10 +555,70 @@ void choose_expr_print(struct tree_node * node){
 
 }
 
+int isokta(char * string){
+    for(int i =0; i<3;i++){
+        if(!('0'<=string[i] && string[i]<='7'))
+            return 0;
+    }
+    return 1;
+}
+
+
+int hexa2decimal(char c){
+    if(isdigit(c)) return c-'0';
+    if(c>='a') return c-'a'+10;
+    if(c<='Z') return c-'A'+10;
+    return 0;
+}
+
 void print_string_for_expression(char * string){
+    int dec_num = 0;
     printf("PUSHS string@");
     for(size_t i = 0;string[i]!='\0';i++){
-        if(string[i]<=32 || string[i]==35 || string[i] == 92){
+        if(i == 0 || string[i+1]=='\0') {
+            continue;
+        }
+        else if(string[i]=='\\'){
+            if(isokta(string+i+1)){
+                    dec_num = 0;
+                    dec_num =dec_num+ (string[i+1]-'0')*8;
+                    dec_num =dec_num+ (string[i+2]-'0')*8;
+                    dec_num =dec_num+ (string[i+3]-'0');
+                    printf("\\%03d", dec_num);
+                    i=i+2;
+            }
+            else if(string[i+1]=='x' && isxdigit(string[i+2]) && isxdigit(string[i+3])){
+                    dec_num = hexa2decimal(string[i+2])*16;
+                    dec_num = dec_num + hexa2decimal(string[i+3]);
+                    printf("\\%03d", dec_num);
+                    i=i+2;
+                }
+
+            else {
+                switch (string[i+1])
+                {
+                case 'n':
+                    printf("\\%03d", '\n');
+                    break;
+                case 't':
+                    printf("\\%03d", '\t');
+                    break;
+                case '\"':
+                case '$':
+                    printf("%c", string[i+1]);
+                    break;
+                case '\\':
+                    printf("\\%03d", '\\');
+                    break;
+                default:
+                    printf("%c", string[i]);
+                    i--;
+                }
+            }
+            i++;
+            continue;
+        }
+        else if(string[i]<=32 || string[i]==35 || string[i] == 92){
             printf("\\%03d", string[i]);
         }
         else{
@@ -421,7 +647,13 @@ void print_expression_node(struct tree_node * node){
 }
 
 void print_return_node(struct tree_node * node){
-    print_expression_node(node->head_child);
+    if(node->head_child == NULL){
+        printf("MOVE GF@_result nil@nil\n");
+    }
+    else{
+        print_expression_node(node->head_child);
+    }
+
     //remove frame
     printf("POPFRAME\n");
     //return
@@ -452,6 +684,19 @@ void print_codefunc_int2float_conversion(){
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
 
+
+    //check for no float/int type
+    printf("TYPE GF@_result GF@_op1\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@bool\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@string\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@nil\n");
+
+    printf("TYPE GF@_result GF@_op2\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@bool\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@string\n");
+    printf("JUMPIFEQ !int2float_conversion_no_conversion GF@_result string@nil\n");
+
+
     printf("TYPE GF@_result GF@_op1\n");
     printf("JUMPIFEQ !int2float_conversion GF@_result string@float\n");
     //if is same as float jump to conversion
@@ -459,6 +704,8 @@ void print_codefunc_int2float_conversion(){
     //if is same as float jump to conversion 
     printf("JUMPIFEQ !int2float_conversion GF@_result string@float\n");
     //both are int
+    printf("LABEL !int2float_conversion_no_conversion\n");
+    //
     printf("PUSHS GF@_op1\n");
     printf("PUSHS GF@_op2\n");
     printf("RETURN\n");
@@ -467,7 +714,6 @@ void print_codefunc_int2float_conversion(){
     //at least one of them is float
     printf("LABEL !int2float_conversion\n");
     
-    printf("TYPE GF@_result GF@_op1\n");
 
     printf("TYPE GF@_result GF@_op1\n");
     printf("JUMPIFEQ !int2float_skip_op1 GF@_result string@float\n");
@@ -492,6 +738,7 @@ void print_EQS_LTS_GTS(char* instruction){
     printf("JUMP !skip%s\n",instruction);
     printf("LABEL !%s\n", instruction);
 
+
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
 
@@ -502,7 +749,18 @@ void print_EQS_LTS_GTS(char* instruction){
     printf("TYPE GF@_op1 GF@_op1\n");
     printf("TYPE GF@_op2 GF@_op2\n");
 
-    printf("JUMPIFNEQ !else%s GF@_op1 GF@_op2\n",instruction);
+    if(strcmp(instruction, "EQS")){
+        printf("JUMPIFEQ !else%s GF@_op1 string@nil\n",instruction);
+        printf("JUMPIFEQ !else%s GF@_op2 string@nil\n",instruction);
+    }
+    else{
+        printf("JUMPIFNEQ !else%s GF@_op1 GF@_op2\n",instruction);
+    }
+
+    //no conversion for EQS
+    if(strcmp(instruction, "EQS")){
+        printf("CALL !int_to_float\n");
+    }
 
 
     printf("%s\n",instruction);
@@ -513,7 +771,7 @@ void print_EQS_LTS_GTS(char* instruction){
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
 
-    printf("PUSHS int@0\n");
+    printf("PUSHS bool@false\n");
 
     printf("RETURN\n");
 
@@ -532,39 +790,18 @@ void print_NLTS_NGTS(char*instruction){
     //check if one of them is null ""  0
 
 
-    printf("TYPE GF@_result GF@_op1\n"); //type
-    printf("MOVE GF@_tmp GF@_op1\n"); //value
-    printf("JUMPIFEQ !isnull%s GF@_result string@nil\n",instruction);
-    printf("JUMPIFEQ !isstring%s GF@_result string@string\n",instruction);
-    printf("JUMPIFEQ !isint%s GF@_result string@int\n",instruction);
+    printf("CALL !int_to_float\n"); //conversion int to float
+    printf("POPS GF@_op2\n");
+    printf("POPS GF@_op1\n");
+    printf("PUSHS GF@_op1\n");
+    printf("PUSHS GF@_op2\n");
 
-    printf("TYPE GF@_result GF@_op2\n"); //type
-    printf("MOVE GF@_tmp GF@_op2\n"); //value
-    printf("JUMPIFEQ !isnull%s GF@_result string@nil\n",instruction);
-    printf("JUMPIFEQ !isstring%s GF@_result string@string\n",instruction);
-    printf("JUMPIFEQ !isint%s GF@_result string@int\n",instruction);
-
-        printf("JUMP !skip_scpecial_condition%s\n",instruction);
-        //is type null
-        printf("LABEL !isnull%s\n",instruction);
-            printf("JUMPIFEQ !true%s GF@_tmp nil@nil\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s\n",instruction);
-        printf("LABEL !isstring%s\n",instruction);
-            printf("JUMPIFEQ !true%s GF@_tmp string@\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s\n",instruction);
-        printf("LABEL !isint%s\n",instruction);
-            printf("JUMPIFEQ !true%s GF@_tmp int@0\n",instruction);
-            printf("JUMP !skip_scpecial_condition%s\n",instruction);
-
-
-        printf("LABEL !skip_scpecial_condition%s\n",instruction);
-    
-    
-    //end of checking for null "" 0
     printf("TYPE GF@_op1 GF@_op1\n");
     printf("TYPE GF@_op2 GF@_op2\n");
 
     printf("JUMPIFNEQ !false%s GF@_op1 GF@_op2\n",instruction);
+    printf("JUMPIFEQ !true%s GF@_op1 string@nil\n",instruction);
+    printf("JUMPIFEQ !true%s GF@_op1 string@nil\n",instruction);
 
 //if
     printf("%s\n",&(instruction[1]));
@@ -577,7 +814,7 @@ void print_NLTS_NGTS(char*instruction){
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
 
-    printf("PUSHS int@1\n");
+    printf("PUSHS bool@true\n");
 
     printf("RETURN\n");
 
@@ -586,8 +823,57 @@ void print_NLTS_NGTS(char*instruction){
 
     printf("POPS GF@_op2\n");
     printf("POPS GF@_op1\n");
+    printf("PUSHS GF@_op1\n");
+    printf("PUSHS GF@_op2\n");
 
-    printf("PUSHS int@0\n");
+
+//<= for "" 0 null
+
+
+    printf("TYPE GF@_result GF@_op1\n"); //type
+    printf("MOVE GF@_tmp GF@_op1\n"); //value
+    printf("JUMPIFEQ !isnull%s GF@_result string@nil\n",instruction);
+    printf("JUMPIFEQ !isstring%s GF@_result string@string\n",instruction);
+    printf("JUMPIFEQ !isfloat%s GF@_result string@float\n",instruction);
+
+        printf("JUMP !skip_scpecial_condition%s\n",instruction);
+        //is type null
+        printf("LABEL !isnull%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp nil@nil\n",instruction);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
+        printf("LABEL !isstring%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp string@\n",instruction);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
+        printf("LABEL !isfloat%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp float@%a\n",instruction,0.0);
+            printf("JUMP !skip_scpecial_condition%s\n",instruction);
+        printf("LABEL !skip_scpecial_condition%s\n",instruction);
+    
+    printf("TYPE GF@_result GF@_op2\n"); //type
+    printf("MOVE GF@_tmp GF@_op2\n"); //value
+    printf("JUMPIFEQ !isnull1%s GF@_result string@nil\n",instruction);
+    printf("JUMPIFEQ !isstring1%s GF@_result string@string\n",instruction);
+    printf("JUMPIFEQ !isfloat1%s GF@_result string@float\n",instruction);
+
+        printf("JUMP !skip_scpecial_condition1%s\n",instruction);
+        //is type null
+        printf("LABEL !isnull1%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp nil@nil\n",instruction);
+            printf("JUMP !skip_scpecial_condition1%s\n",instruction);
+        printf("LABEL !isstring1%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp string@\n",instruction);
+            printf("JUMP !skip_scpecial_condition1%s\n",instruction);
+        printf("LABEL !isfloat1%s\n",instruction);
+            printf("JUMPIFEQ !true%s GF@_tmp float@%a\n",instruction,0.0);
+            printf("JUMP !skip_scpecial_condition1%s\n",instruction);
+        printf("LABEL !skip_scpecial_condition1%s\n",instruction);
+
+    //end of checking for null "" 0
+    printf("POPS GF@_op2\n");
+    printf("POPS GF@_op1\n");
+
+
+    printf("PUSHS bool@false\n");
 
     printf("RETURN\n");
 //end
@@ -605,6 +891,7 @@ void print_floatval(){
     printf("JUMPIFEQ !float_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !float_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !float_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !float_val_bool GF@_tmp string@bool\n");
 
     printf("LABEL !float_val_float \n");
     printf("RETURN\n");
@@ -614,9 +901,13 @@ void print_floatval(){
     printf("RETURN\n");
 
     printf("LABEL !float_val_string \n");
-   // printf("STRING2FLOAT GF@_result GF@_result\n");
-   //EXTENSION 
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
+
+    printf("LABEL !float_val_bool \n");
+    printf("JUMP !ERROR7\n");
+    printf("RETURN\n");
+
 
     printf("LABEL !float_val_int \n");
     printf("INT2FLOAT GF@_result GF@_result \n");
@@ -624,6 +915,46 @@ void print_floatval(){
 
     printf("LABEL !float_val_end\n");
     printf("LABEL !skipfloat_val\n");
+}
+
+void print_boolval(){
+    printf("JUMP !skipbool_val\n");
+    printf("LABEL boolval\n");
+    printf("POPS GF@_result\n");
+    printf("TYPE GF@_tmp GF@_result\n"); // in tmp is type
+
+    printf("JUMPIFEQ !bool_val_int GF@_tmp string@int\n");
+    printf("JUMPIFEQ !bool_val_float GF@_tmp string@float\n");
+    printf("JUMPIFEQ !bool_val_string GF@_tmp string@string\n");
+    printf("JUMPIFEQ !bool_val_null GF@_tmp string@nil\n");
+    //is bool
+    printf("RETURN\n");
+
+    printf("LABEL !bool_val_null \n");
+    printf("MOVE GF@_result bool@false\n");
+    printf("RETURN\n");
+
+    printf("LABEL !bool_val_string \n");
+    printf("EQ GF@_tmp GF@_result string@\n"); //is ""
+    printf("EQ GF@_result GF@_result string@0\n"); // is "0"
+    printf("OR GF@_result GF@_result GF@_tmp\n");
+    printf("NOT GF@_result GF@_result\n");
+    printf("RETURN\n");
+
+    printf("LABEL !bool_val_int \n");
+    printf("EQ GF@_result GF@_result int@0\n");
+    printf("NOT GF@_result GF@_result\n");
+    printf("RETURN\n");
+
+    printf("LABEL !bool_val_float \n");
+    printf("INT2FLOAT GF@_tmp int@0\n");
+    printf("EQ GF@_result GF@_result GF@_tmp\n");
+    printf("NOT GF@_result GF@_result\n");
+    printf("RETURN\n");
+
+
+    printf("LABEL !bool_val_end\n");
+    printf("LABEL !skipbool_val\n");
 }
 
 
@@ -637,6 +968,8 @@ void print_intval(){
     printf("JUMPIFEQ !int_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !int_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !int_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !int_val_bool GF@_tmp string@bool\n");
+
 
     printf("LABEL !int_val_int \n");
     printf("RETURN\n");
@@ -646,10 +979,13 @@ void print_intval(){
     printf("RETURN\n");
 
     printf("LABEL !int_val_string \n");
-
-    //printf("STRING2INT GF@_result GF@_result\n");
-    //extension
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
+
+    printf("LABEL !int_val_bool \n");
+    printf("JUMP !ERROR7\n");
+    printf("RETURN\n");
+
 
     printf("LABEL !int_val_float \n");
     printf("FLOAT2INT GF@_result GF@_result \n");
@@ -670,6 +1006,8 @@ void print_strval(){
     printf("JUMPIFEQ !str_val_float GF@_tmp string@float\n");
     printf("JUMPIFEQ !str_val_string GF@_tmp string@string\n");
     printf("JUMPIFEQ !str_val_null GF@_tmp string@nil\n");
+    printf("JUMPIFEQ !str_val_bool GF@_tmp string@bool\n");
+
 
     printf("LABEL !str_val_string \n");
     printf("RETURN\n");
@@ -678,11 +1016,18 @@ void print_strval(){
     printf("MOVE GF@_result string@\n");
     printf("RETURN\n");
 /* zbytek je rozsireni*/
-    printf("LABEL !str_val_int\n"); 
+    printf("LABEL !str_val_int\n");
+    printf("JUMP !ERROR7\n");
     printf("RETURN\n");
 
-    printf("LABEL !str_val_float\n"); 
+    printf("LABEL !str_val_float\n");
+    printf("JUMP !ERROR7\n"); 
     printf("RETURN\n");
+
+    printf("LABEL !str_val_bool\n");
+    printf("JUMP !ERROR7\n"); 
+    printf("RETURN\n");
+
 /**/
     printf("LABEL !str_val_end\n");
     printf("LABEL !skipstr_val\n");
@@ -692,6 +1037,9 @@ void print_ord(){
     printf("JUMP !skipord\n");
     printf("LABEL ord\n");
     printf("POPS GF@_result\n");
+
+    printf("TYPE GF@_tmp GF@_result\n");
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
 
 
     printf("JUMPIFEQ !ord_empty GF@_result string@\n"); //check if string is empty
@@ -717,13 +1065,20 @@ void print_substring(){
 
     printf("DEFVAR TF@%s\n","string");
     printf("POPS TF@%s\n","string");
+    printf("TYPE GF@_tmp TF@string\n");//check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@string\n");
 
 
     printf("DEFVAR TF@%s\n","start");
     printf("POPS TF@%s\n","start");
+    printf("TYPE GF@_tmp TF@start\n"); // check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
+
 
     printf("DEFVAR TF@%s\n","end");
     printf("POPS TF@%s\n","end");
+    printf("TYPE GF@_tmp TF@end\n"); // check for type
+    printf("JUMPIFNEQ !ERROR4 GF@_tmp string@int\n");
 
 
     printf("DEFVAR TF@%s\n","counter");
@@ -759,6 +1114,7 @@ void print_substring(){
     */
     printf("MOVE GF@_result string@\n");
 
+    printf("JUMPIFEQ !substring_end TF@counter int@0\n"); // counter != 0
 
     printf("LABEL !substring_dowhile\n"); //do while
     printf("SUB TF@counter TF@counter int@1\n");
@@ -767,6 +1123,7 @@ void print_substring(){
     printf("CONCAT GF@_result GF@_tmp GF@_result \n");
 
     printf("JUMPIFNEQ !substring_dowhile TF@counter int@0\n"); // counter != 0
+    printf("LABEL !substring_end\n");
 
     printf("RETURN\n");
 
@@ -775,15 +1132,90 @@ void print_substring(){
     printf("MOVE GF@_result nil@nil\n");
     printf("RETURN\n");
 
-    printf("LABEL !substring_end\n");
     printf("LABEL !skipsubstring\n");
 
 
 
 }
 
-void code_generator(struct tree_node * node){
+void definition_null2int(){
+    printf("JUMP !skipnull2int\n");
+    printf("LABEL !null2int\n");
+    printf("POPS GF@_op1\n");
+    printf("POPS GF@_op2\n");
 
+    printf("TYPE GF@_tmp GF@_op1\n");
+    printf("JUMPIFNEQ !notnull1 GF@_tmp string@nil\n"); //check if string is empty
+    printf("MOVE GF@_op1 int@0\n"); //returns first character of string
+    printf("LABEL !notnull1\n");
+
+    printf("TYPE GF@_tmp GF@_op2\n");
+    printf("JUMPIFNEQ !notnull2 GF@_tmp string@nil\n"); //check if string is empty
+    printf("MOVE GF@_op2 int@0\n"); //returns first character of string
+    printf("LABEL !notnull2\n");
+
+    printf("PUSHS GF@_op2\n");
+    printf("PUSHS GF@_op1\n");
+
+
+    printf("RETURN\n");
+
+    printf("LABEL !skipnull2int\n");
+
+
+}
+
+//TODO: UGLY FIX part1
+
+void move_assign(struct tree_node * original_node, int count){
+    original_node->data->type=ASSIGN;
+    struct tree_node * iterator_node = NULL;
+    for(iterator_node = original_node->parent;count!=0;iterator_node=iterator_node->parent){
+        if(iterator_node->data!=NULL && iterator_node->data->type==WHILE){
+            count--;
+        }
+    }
+    //checking for duplicate defvar
+    for(struct tree_node * node = iterator_node->head_child;node->data->type==FIRST_ASSIGN;node=node->next_sibling){
+        if(!strcmp(node->head_child->data->value,original_node->head_child->data->value))return;
+    }
+
+    struct tree_node *new_node = init_tree_node();
+    new_node->parent = iterator_node;
+    add_tn_data(new_node, FIRST_ASSIGN, "");
+
+    new_node->next_sibling=iterator_node->head_child;
+    iterator_node->head_child = new_node;
+
+    add_tree_node(new_node,NAME,original_node->head_child->data->value);
+    add_tree_node(new_node,T_INT,"0");
+}
+
+void tree_traversal(struct tree_node * node, int count){
+    if(node == NULL){
+        return;
+    }
+    else{
+        if(node->data!=NULL && node->data->type==FIRST_ASSIGN && count !=0){
+            move_assign(node, count);
+        }
+        if(node->data!=NULL && node->data->type==WHILE){
+            count++;
+        }
+        for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
+            tree_traversal(child_node, count);
+        }
+
+    }
+}
+
+
+
+
+
+void code_generator(struct tree_node * node){
+    //TODO: UGLY FIX part2
+    //tree_traversal(node,0);
     print_init_code();
 
 
@@ -797,12 +1229,14 @@ void code_generator(struct tree_node * node){
     print_NLTS_NGTS("NLTS");
     print_NLTS_NGTS("NGTS");
 
+    print_boolval();
     print_floatval();
     print_intval();
     print_strval();
     print_substring();
     print_ord();
 
+    definition_null2int();
 
     printf("CALL !MAIN\n");
     printf("JUMP !SKIP_MAIN\n");
@@ -820,6 +1254,19 @@ void code_generator(struct tree_node * node){
 
     printf("CLEARS\n");
     printf("EXIT int@0\n");
+    
+
+    printf("LABEL !ERROR4\n");
+    printf("EXIT int@4\n");
+
+    printf("LABEL !ERROR5\n");
+    printf("EXIT int@5\n");
+
+    printf("LABEL !ERROR7\n");
+    printf("EXIT int@5\n");
+
+
     //TODO:
     //potom asi to ma delat neco na konci?? asi nějaký return
 }
+

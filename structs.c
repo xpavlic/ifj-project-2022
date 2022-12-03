@@ -4,44 +4,44 @@
 
 #include <stdlib.h>
 
+#include "syntax_tree.h"
+
 #define MIN_TABLE_SIZE 10
 #define AVG_LEN_MAX 10
 #define AVG_LEN_MIN 5
 
 // Typy:
-typedef const char * htab_key_t;        // type of key
-typedef int htab_value_t;               // type of value
+typedef const char *htab_key_t; // type of key
 
 /**
  * @brief pair of key and value
-*/
+ */
 typedef struct htab_pair {
-    htab_key_t    key;          // key
-    void * value;               // associated value
-} htab_pair_t;                  // typedef
+    htab_key_t key; // name
+    void *value;    // pointer to a content structure
+} htab_pair_t;      // typedef
 
-typedef struct htab_item{
+typedef struct htab_item {
     htab_pair_t data;
-    struct htab_item * next;
+    struct htab_item *next;
 } htab_item_t;
 
-
-struct htab{
+struct htab {
     size_t size;
     size_t arr_size;
-    htab_item_t ** arr_ptr;
+    htab_item_t **arr_ptr;
 };
 
-typedef struct symtable_item{
-    struct htab * hash_table;
-    struct symtable_item * next;
+typedef struct symtable_item {
+    struct htab *hash_table;
+    struct symtable_item *next;
+    char *name;
 } symtable_item_t;
 
-
-struct symtable{
-    struct symtable_item* head;
+typedef struct symtable {
+    struct symtable_item *head;
     size_t count;
-    void (*free_func)(void*);
-};
+    void (*free_func)(void *);
+} symtable_t;
 
 #endif

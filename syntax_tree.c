@@ -1,6 +1,5 @@
 #include "syntax_tree.h"
 
-
 struct tn_data *init_tn_data(int type, const char(*value)) {
     struct tn_data *data = malloc(sizeof(struct tn_data));
     if (data == NULL) return NULL;
@@ -9,7 +8,6 @@ struct tn_data *init_tn_data(int type, const char(*value)) {
     strcpy(data->value, value);
 
     return data;
-
 }
 
 struct tn_data *add_tn_data(struct tree_node *node, int type, const char(*value)) {
@@ -20,10 +18,9 @@ struct tn_data *add_tn_data(struct tree_node *node, int type, const char(*value)
     return node->data;
 }
 
-
 struct tree_node *init_tree_node() {
     struct tree_node *node = malloc(sizeof(struct tree_node));
-    if (node == NULL)return NULL;
+    if (node == NULL) return NULL;
 
     node->count = 0;
 
@@ -38,7 +35,7 @@ struct tree_node *init_tree_node() {
 
 struct tree_node *add_tree_node_object(struct tree_node *parent_node, struct tree_node *new_node) {
     parent_node->count++;
-    struct tree_node* new_node_copy = init_tree_node();
+    struct tree_node *new_node_copy = init_tree_node();
     add_tn_data(new_node_copy, new_node->data->type, new_node->data->value);
     new_node_copy->tail_child = new_node->tail_child;
     new_node_copy->head_child = new_node->head_child;
@@ -71,7 +68,6 @@ struct tree_node *add_tree_node(struct tree_node *parent_node, int type, const c
     return new_node;
 }
 
-
 void free_tree_data(struct tn_data *data) {
     if (data == NULL) return;
     if (data->value != NULL) {
@@ -95,7 +91,7 @@ void free_tree_node(struct tree_node *node) {
 }
 
 int init_node_stack(Node_stack *stack) {
-    stack->nodes = (struct tree_node *) malloc(16 * sizeof(struct tree_node));
+    stack->nodes = (struct tree_node *)malloc(16 * sizeof(struct tree_node));
     if (!stack->nodes) {
         return 1;
     }
@@ -121,7 +117,7 @@ int is_empty_node_stack(Node_stack *stack) {
 int node_stack_push(Node_stack *stack, struct tree_node *node) {
     if (stack->free_index == stack->capacity) {
         stack->capacity *= 2;
-        stack->nodes = (struct tree_node *) realloc(stack->nodes, stack->capacity * sizeof(struct tree_node));
+        stack->nodes = (struct tree_node *)realloc(stack->nodes, stack->capacity * sizeof(struct tree_node));
         if (!stack->nodes) {
             return 1;
         }
