@@ -15,7 +15,6 @@ enum error_state {
     UNDEFINED_VAR = 5,
     WRONG_RETURN_EXPR_COUNT = 6,
     TYPE_COMPATIBILITY_ERROR = 7,
-    OTHER_SEM_ERROR = 8,
     INTERNAL_ERROR = 99
 };
 
