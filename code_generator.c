@@ -1,61 +1,12 @@
+/**
+ * @project Compiler IFJ22
+ * @file    code_generaotr.c
+ * @authors Štěpán Nekula <xnekul04>
+ */
+
+
 #include "code_generator.h"
 
-struct tree_node * find_child_node(struct tree_node * node, int type);
-
-//BASIC NODE HANDLING
-void print_return_node(struct tree_node * node);
-void print_expression_node(struct tree_node * node);
-void print_while_node(struct tree_node * node);
-void print_if_node(struct tree_node * node);
-void print_assaign_node(struct tree_node * node);
-void print_first_assign_node(struct tree_node * node);
-void print_general_callfunc_node(struct tree_node * node);
-void print_callfunc_node(struct tree_node * node);
-void print_decfunc_node(struct tree_node * node);
-void print_body_node(struct tree_node * body);
-void print_defvar_node(struct tree_node * body);
-
-// EXPRESSION NODE HANDLING + everything similar to expression 
-void print_string_for_expression(char * string);
-void choose_expr_print(struct tree_node * node);
-void print_operator(int type);
-void postorder(struct tree_node * node);
-
-//CONVERSIONS
-void print_codefunc_int2float_conversion();
-void implicit_conversion_result(char * type);
-
-void pushs_arguments(struct tree_node * node);
-
-void inbody_scan_node(struct tree_node * node);
-
-
-//INITIATION OF VARIABLES AT THE START OF THE PROGRAM
-void print_init_code();
-
-/*
-    FUNCTIONS DEFINITION AT THE START OF THE PROGRAM
-    -- definitions of functions, that they can be declared
-*/
-void print_substring();
-void print_ord();
-void print_strval();
-void print_intval();
-void print_floatval();
-void print_NLTS_NGTS(char*instruction);
-void print_EQS_LTS_GTS(char* instruction);
-
-
-/*
-    ALTERNATIVE FUNCTIONS
-    -- functions that are implemented as inline
-*/
-void print_chr(struct tree_node * node);
-void print_strlen(struct tree_node * node);
-void print_write(struct tree_node * node);
-void print_readf();
-void print_readi();
-void print_reads();
 
 
 //////////////////////////////////////////////////////////
@@ -85,11 +36,6 @@ void pushs_arguments(struct tree_node * node){
     printf("PUSHS GF@_result\n");
 }
 
-void implicit_conversion_result(char * type){
-    printf("PUSHS GF@_result\n");
-    printf("CALL %sval\n",type);
-}
-
 void inbody_scan_node(struct tree_node * node){
     switch (node->data->type)
     {
@@ -105,9 +51,6 @@ void inbody_scan_node(struct tree_node * node){
     case ASSIGN:
         print_assaign_node(node);
         break;
-    //case FIRST_ASSIGN:
-    //    print_first_assign_node(node);
-    //    break;
     case RETURN:
         print_return_node(node);
         break;
@@ -120,10 +63,6 @@ void inbody_scan_node(struct tree_node * node){
     case EXPRESSION:
         print_expression_node(node);
         break;
-    //Variables are at the end of body ://
-    //case VARIABLES: //TODO: DEFVAR
-    //    print_defvar_node(node);
-    //    break;
     default:
         break;
     }
@@ -131,7 +70,6 @@ void inbody_scan_node(struct tree_node * node){
 
 void print_defvar_node(struct tree_node * defvar_node){
     if(defvar_node == NULL)return;
-    //TODO: UGLY FIX
 
     for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
         if(defvar_node->parent->parent == NULL || find_child_node(defvar_node->parent->parent,PARAMETERS) == NULL){
@@ -341,18 +279,13 @@ void print_general_callfunc_node(struct tree_node * node){
 
     //call function
     printf("CALL %s\n",func_name);
-    //TODO: check for return
+    //check for return
     struct tree_node * return_type_node = find_child_node(node,(int)TYPE);
     if(return_type_node == NULL)
         return;
     check_returned_value(return_type_node);
 }
 
-
-void print_first_assign_node(struct tree_node * node){
-    printf("DEFVAR LF@%s\n",node->head_child->data->value);
-    print_assaign_node(node);
-}
 
 void print_assaign_node(struct tree_node * node){
     if(node->tail_child->data->type == FUNC_CALL){
@@ -528,25 +461,17 @@ void choose_expr_print(struct tree_node * node){
     }
     //float
     else if(node->data->type == T_FLOAT){
-        //print push variable
         double float_number = strtod (node->data->value, NULL);
         printf("PUSHS float@%a\n",float_number);
     }
     //string
     else if(node->data->type == T_STRING){
-        //print push variable
         //printf("PUSHS string@%s\n",node->data->value); but with added escape sequences
         print_string_for_expression(node->data->value);
     }
     //null
     else if(node->data->type == T_NULL){ 
-        //TODO:temporary fix
-        if(!strcmp(node->data->value,"===")){
-            printf("CALL !EQS\n");
-        }
-        else{
             printf("PUSHS nil@nil\n");
-        }
     }
     //operator
     else{
@@ -1165,57 +1090,7 @@ void definition_null2int(){
 
 }
 
-//TODO: UGLY FIX part1
-
-void move_assign(struct tree_node * original_node, int count){
-    original_node->data->type=ASSIGN;
-    struct tree_node * iterator_node = NULL;
-    for(iterator_node = original_node->parent;count!=0;iterator_node=iterator_node->parent){
-        if(iterator_node->data!=NULL && iterator_node->data->type==WHILE){
-            count--;
-        }
-    }
-    //checking for duplicate defvar
-    for(struct tree_node * node = iterator_node->head_child;node->data->type==FIRST_ASSIGN;node=node->next_sibling){
-        if(!strcmp(node->head_child->data->value,original_node->head_child->data->value))return;
-    }
-
-    struct tree_node *new_node = init_tree_node();
-    new_node->parent = iterator_node;
-    add_tn_data(new_node, FIRST_ASSIGN, "");
-
-    new_node->next_sibling=iterator_node->head_child;
-    iterator_node->head_child = new_node;
-
-    add_tree_node(new_node,NAME,original_node->head_child->data->value);
-    add_tree_node(new_node,T_INT,"0");
-}
-
-void tree_traversal(struct tree_node * node, int count){
-    if(node == NULL){
-        return;
-    }
-    else{
-        if(node->data!=NULL && node->data->type==FIRST_ASSIGN && count !=0){
-            move_assign(node, count);
-        }
-        if(node->data!=NULL && node->data->type==WHILE){
-            count++;
-        }
-        for(struct tree_node * child_node = node->head_child;child_node!=NULL;child_node=child_node->next_sibling){
-            tree_traversal(child_node, count);
-        }
-
-    }
-}
-
-
-
-
-
 void code_generator(struct tree_node * node){
-    //TODO: UGLY FIX part2
-    //tree_traversal(node,0);
     print_init_code();
 
 
@@ -1254,8 +1129,9 @@ void code_generator(struct tree_node * node){
 
     printf("CLEARS\n");
     printf("EXIT int@0\n");
-    
+    //end of program main body
 
+    // error labels for exit
     printf("LABEL !ERROR4\n");
     printf("EXIT int@4\n");
 
@@ -1265,8 +1141,5 @@ void code_generator(struct tree_node * node){
     printf("LABEL !ERROR7\n");
     printf("EXIT int@5\n");
 
-
-    //TODO:
-    //potom asi to ma delat neco na konci?? asi nějaký return
 }
 
