@@ -1,6 +1,9 @@
-// syntax_tree.h - rozhraní modulu pro syntax tree (IFJ PROJEKT)
-// Licence: žádná (Public domain)
-// Autor: Štěpán Nekula, Jan pavlíček
+/**
+ * @project Compiler IFJ22
+ * @file    syntax_tree.h
+ * @authors Stepan Nekula <xnekul04>
+ */
+
 
 #ifndef __SYNTAX_TREE_H__
 #define __SYNTAX_TREE_H__
@@ -80,6 +83,7 @@ struct tn_data {
     char *value;
 };
 
+//TODO:
 // TODO REWRITE TO FIX LEAKS
 typedef struct {
     struct tree_node *nodes;
@@ -88,52 +92,53 @@ typedef struct {
 } Node_stack;
 
 /**
- * @brief allocates and initiates tn_data structure
- * @param int type
- * @param const char(* value)
- * @return struct tn_data *
- */
-struct tn_data *init_tn_data(int type, const char(*value));
+ * @brief allocates and initiates tn_data structure, that is used for tree_node
+ * @param type: attribute type of to be initialized tn_data structure
+ * @param value: attribute value of to be initialized tn_data structure
+ * @return pointer to initialized struct tn_data
+*/
+struct tn_data * init_tn_data(enum tree_node_type type, const char(* value));
 
 /**
  * @brief allocates and initiates tree_node
- * @return struct tree_node *
- */
-struct tree_node *init_tree_node();
+ * @return pointer to allocated tree node
+*/
+struct tree_node * init_tree_node();
+
 
 /**
  * @brief sets attribut data for given tree node
- * @param struct tree_node * node
- * @param int type
- * @param const char(* value)
- * @return struct tn_data *
- */
-struct tn_data *add_tn_data(struct tree_node *node, int type, const char(*value));
+ * @param node: pointer to the node that will be added attribute data
+ * @param type: attribute type of to be initialized tn_data structure
+ * @param value: attribute value of to be initialized tn_data structure
+ * @return pointer to added struct tn_data
+*/
+struct tn_data * add_tn_data(struct tree_node * node,enum tree_node_type type, const char(* value));
 
 /**
- * @brief adds new child node to linked list of parent node and sets its value/data
- * @param struct tree_node * parent_node
- * @param int type
- * @param const char(* value)
- * @return struct tree_node *
- */
-struct tree_node *add_tree_node(struct tree_node *parent_node, int type, const char(*value));
+ * @brief adds new child node to back of linked list of parent node and sets its data
+ * @param parent_node: node of the added child node
+ * @param type: type of the new child node
+ * @param value: value of the new child node
+ * @return pointer to the new child node
+*/
+struct tree_node * add_tree_node(struct tree_node *parent_node,enum tree_node_type type, const char(* value));
 
 /**
  * @brief frees attribute data of tree node
- * @param struct tn_data *data
- */
+ * @param data: pointer to struct tn_data that will be freed
+*/
 void free_tree_data(struct tn_data *data);
 
 /**
  * @brief frees all children of node
- * @param struct tree_node * node
- */
-void free_children(struct tree_node *node);
+ * @param node: node whose all child nodes will be freed
+*/
+void free_children(struct tree_node * node);
 
 /**
  * @brief frees node with all its children
- * @param struct tree_node * node
+ * @param node: to be freed node
  * @note OTHER NODES MIGHT BE LINKED TO THIS NODE!
  */
 void free_tree_node(struct tree_node *node);
