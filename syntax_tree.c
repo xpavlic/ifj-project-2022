@@ -18,7 +18,7 @@ struct tn_data * init_tn_data(enum tree_node_type type, const char(* value)){
     return data;
 }
 
-struct tn_data *add_tn_data(struct tree_node *node, int type, const char(*value)) {
+struct tn_data *add_tn_data(struct tree_node *node, enum tree_node_type type, const char(*value)) {
     free_tree_data(node->data);
     node->data = init_tn_data(type, value);
     return node->data;
@@ -59,7 +59,7 @@ struct tree_node *add_tree_node_object(struct tree_node *parent_node, struct tre
     return new_node;
 }
 
-struct tree_node *add_tree_node(struct tree_node *parent_node, int type, const char(*value)) {
+struct tree_node *add_tree_node(struct tree_node *parent_node, enum tree_node_type type, const char(*value)) {
     parent_node->count++;
     struct tree_node *new_node = init_tree_node();
     new_node->parent = parent_node;

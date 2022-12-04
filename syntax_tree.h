@@ -83,8 +83,8 @@ struct tn_data {
     char *value;
 };
 
-//TODO:
-// TODO REWRITE TO FIX LEAKS
+
+// TODO: REWRITE TO FIX LEAKS
 typedef struct {
     struct tree_node *nodes;
     unsigned int free_index;
@@ -142,6 +142,8 @@ void free_children(struct tree_node * node);
  * @note OTHER NODES MIGHT BE LINKED TO THIS NODE!
  */
 void free_tree_node(struct tree_node *node);
+
+
 
 int init_node_stack(Node_stack *stack);
 
