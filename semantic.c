@@ -170,8 +170,12 @@ void print_table(symtable_t *symtable) {
 
 enum error_state add_params_into_frame(symtable_t *symtable, struct tree_node *parameters_node) {
     for (struct tree_node *tmp = parameters_node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
-        htab_pair_t *new_pair = symtable_add(symtable, tmp->data->value, &value_create_var);
-        if (new_pair == NULL) return INTERNAL_ERROR;
+        if (symtable_find(symtable, tmp->data->value) == NULL) {
+            htab_pair_t *new_pair = symtable_add(symtable, tmp->data->value, &value_create_var);
+            if (new_pair == NULL) return INTERNAL_ERROR;
+        } else {
+            return OTHER_SEM_ERROR;
+        }
     }
     return OK;
 }
@@ -280,7 +284,7 @@ enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, s
 
 enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node) {
     enum error_state result_state = OK;
-    if(symtable_add_frame(symtable)){
+    if (symtable_add_frame(symtable)) {
         return INTERNAL_ERROR;
     }
     if (symtable->head == NULL) return INTERNAL_ERROR;
