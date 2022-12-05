@@ -1,3 +1,8 @@
+/**
+ * @project Compiler IFJ22
+ * @file    strings.h
+ * @authors Martin Soukup <xsouku15>
+ */
 #pragma once
 
 #include <stdio.h>

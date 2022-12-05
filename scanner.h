@@ -1,3 +1,8 @@
+/**
+ * @project Compiler IFJ22
+ * @file scanner.h
+ * @authors Martin Soukup <xsouku15>
+*/
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
@@ -12,7 +17,11 @@
 
 #define EOL '\n'
 
-
+/**
+ * @brief Function goes through file and build token structure
+ * @param FILE Source file
+ * @param Token Token structure
+ */
 int get_token(FILE *file, Token *tk);
 
 
@@ -25,11 +34,11 @@ typedef enum {
 
     // IDENTIFIERS
     state_IDENTIFIER, //END
-    state_IDENTIFIER_KEYWORD, //POSSIBLE
+    state_IDENTIFIER_KEYWORD,
     state_KEYWORD, //END
 
     // VARIABLE
-    state_DOLLAR, //NONEND
+    state_DOLLAR,
     state_VARIABLE, //END
 
     // TYPE
@@ -43,25 +52,26 @@ typedef enum {
     state_END,
 
     // NUMERALS
-    state_INT,
-    state_FLOAT,
-    state_FDOT,
+    state_INT, //END
+    state_FLOAT, //END
+    state_FDOT, 
     state_FLOAT_N,
     state_FLOAT_EN,
     state_EXPONENT,
 
+    //OPERATORS
     state_PLUS, //END
     state_MINUS, //END
     state_INTDIVIDE,   //POSSIBLEEND
     state_TIMES, //END
-    state_EQUAL, //NONEND
-    state_OPEQUAL,
-    state_NOTEQUAL,
+    state_EQUAL, //END
+    state_OPEQUAL, //END
+    state_NOTEQUAL, //END
 
-    state_EXCLAMATION, //POSSIBLE
+    state_EXCLAMATION,
     state_MORETHAN, //END
-    state_MOREEQUAL,
-    state_LESSEQUAL,
+    state_MOREEQUAL, //END
+    state_LESSEQUAL, //END
     state_LESSTHAN, //END
 
     state_LEFTPARENT, //END
@@ -69,11 +79,11 @@ typedef enum {
     state_CLEFTPARENT, //END
     state_CRIGHTPARENT, //END
 
-    state_COMMA,
-    state_COLON,
+    state_COMMA, //END
+    state_COLON, //END
 
     // STRINGS
-    state_STRING,
+    state_STRING, //END
     state_ESCAPE,
     state_CONCANT, //END
 

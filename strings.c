@@ -1,3 +1,8 @@
+/**
+ * @project Compiler IFJ22
+ * @file strings.c
+ * @authors Martin Soukup <xsouku15>
+*/
 #include "strings.h"
 
 const size_t dyn_str_init_size = 16;

@@ -1,9 +1,9 @@
+/**
+ * @project Compiler IFJ22 
+ * @file scanner.c
+ * @authors Martin Soukup <xsouku15> Jan Pavlíček <xpavli95>
+*/
 #include "scanner.h"
-
-static int line;
-static int indexE;
-static int indexH;
-
 
 static char *kwords[] = {
         "else\0", "float\0",  "function\0", "if\0",   "int\0",
@@ -13,8 +13,7 @@ static char *kwords[] = {
 int get_token(FILE *file, Token *tk) {
     state state = state_START;
     tk->type = state_START;
-    indexE = 0;
-    indexH = 0;
+
     static int flagPre = 0;
     int c;
     while (1) {
@@ -100,9 +99,7 @@ int get_token(FILE *file, Token *tk) {
                     tk->type = state_EOF;
                     return 0;
                 } else if (c == EOL) {
-                    tk->type = state_EOL;
-                    tk->line++;
-                    return 0;
+                    state = state_EOL;
                 } else if (c == '"') {
                     add_char(&tk->val, c);
                     state = state_STRING;
@@ -171,11 +168,6 @@ int get_token(FILE *file, Token *tk) {
                     tk->type = state_PROLOG;
                     return 0;
                 }
-                break;
-            case state_EOL:
-                ungetc(c, file);
-                line++;
-                state = state_START;
                 break;
             case state_IDENTIFIER:
                 if (c == '_' || isalpha(c) || isdigit(c)) {
@@ -406,6 +398,7 @@ int get_token(FILE *file, Token *tk) {
                 }
                 break;
             case state_ERROR:
+            case state_EOL:
             case state_KEYWORD:
             case state_VARIABLE:
             case state_EOF:
