@@ -12,7 +12,11 @@
 
 #define EOL '\n'
 
-
+/**
+ * @brief Function goes through file and build token structure
+ * @param FILE Source file
+ * @param Token Token structure
+ */
 int get_token(FILE *file, Token *tk);
 
 
