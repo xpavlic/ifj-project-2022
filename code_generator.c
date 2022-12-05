@@ -71,14 +71,20 @@ void inbody_scan_node(struct tree_node * node){
 void print_defvar_node(struct tree_node * defvar_node){
     if(defvar_node == NULL)return;
 
+    struct tree_node * param_node = NULL;
+    //if this node isnt in body do:
+    if(defvar_node->parent->parent != NULL){
+        param_node = find_child_node(defvar_node->parent->parent,PARAMETERS);
+    }
+
     for(struct tree_node * node = defvar_node->head_child;node!=NULL;node=node->next_sibling){
-        if(defvar_node->parent->parent == NULL || find_child_node(defvar_node->parent->parent,PARAMETERS) == NULL){
+        if(defvar_node->parent->parent == NULL || param_node == NULL || param_node->head_child == NULL){
             printf("DEFVAR LF@%s\n",node->data->value);
             continue;
         }
         else{
             
-            for(struct tree_node * parameter = find_child_node(defvar_node->parent->parent,PARAMETERS)->head_child;parameter!=NULL;parameter=parameter->next_sibling){
+            for(struct tree_node * parameter = param_node->head_child;parameter!=NULL;parameter=parameter->next_sibling){
                 if(!strcmp(node->data->value,parameter->data->value))
                     break;
                 if(parameter->next_sibling == NULL){
@@ -1139,7 +1145,7 @@ void code_generator(struct tree_node * node){
     printf("EXIT int@5\n");
 
     printf("LABEL !ERROR7\n");
-    printf("EXIT int@5\n");
+    printf("EXIT int@7\n");
 
 }
 
