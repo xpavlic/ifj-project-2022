@@ -1,6 +1,8 @@
-//
-// Created by jan on 30.10.22.
-//
+/**
+ * @project Compiler IFJ22
+ * @file    main.c
+ * @authors Jan Pavlíček <xpavli95>
+ */
 
 #include "token_stack.h"
 

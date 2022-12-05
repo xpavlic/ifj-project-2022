@@ -1,3 +1,8 @@
+/**
+ * @project Compiler IFJ22
+ * @file    semantic.c
+ * @authors  Matej Vadovič <xvadov01>
+ */
 #include "semantic.h"
 
 #define VALUE(node) ((value_t *)node->value)
@@ -28,8 +33,7 @@ enum error_state semantic_analysis(struct tree_node *node) {
 
     symtable_t *fnc_symtable = symtable_init(&value_t_free);
     if (fnc_symtable != NULL) {
-        symtable_add_frame(fnc_symtable);
-        if (fnc_symtable->head == NULL) {
+        if (symtable_add_frame(fnc_symtable)) {
             symtable_free(fnc_symtable);
             return INTERNAL_ERROR;
         }
@@ -39,8 +43,7 @@ enum error_state semantic_analysis(struct tree_node *node) {
 
     symtable_t *symtable = symtable_init(&value_t_free);
     if (symtable != NULL) {
-        symtable_add_frame(symtable);
-        if (symtable->head == NULL) {
+        if (symtable_add_frame(symtable)) {
             symtable_free(symtable);
             symtable_free(fnc_symtable);
             return INTERNAL_ERROR;
@@ -116,7 +119,6 @@ enum error_state add_builtin_functions(symtable_t *fnc_symtable) {
 }
 
 enum error_state add_parameter(value_t *content, char *type) {
-    assert(content->type == value_fnc);
     value_fnc_t *fnc = &content->val.fnc;
     fnc->parameters = (char **)realloc(
         fnc->parameters, sizeof(char *) * (++fnc->number_of_parameters));
@@ -168,8 +170,12 @@ void print_table(symtable_t *symtable) {
 
 enum error_state add_params_into_frame(symtable_t *symtable, struct tree_node *parameters_node) {
     for (struct tree_node *tmp = parameters_node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
-        htab_pair_t *new_pair = symtable_add(symtable, tmp->data->value, &value_create_var);
-        if (new_pair == NULL) return INTERNAL_ERROR;
+        if (symtable_find(symtable, tmp->data->value) == NULL) {
+            htab_pair_t *new_pair = symtable_add(symtable, tmp->data->value, &value_create_var);
+            if (new_pair == NULL) return INTERNAL_ERROR;
+        } else {
+            return OTHER_SEM_ERROR;
+        }
     }
     return OK;
 }
@@ -278,7 +284,9 @@ enum error_state traverse_body(symtable_t *fnc_symtable, symtable_t *symtable, s
 
 enum error_state traverse_fnc_dec(symtable_t *fnc_symtable, symtable_t *symtable, struct tree_node *node) {
     enum error_state result_state = OK;
-    symtable_add_frame(symtable);
+    if (symtable_add_frame(symtable)) {
+        return INTERNAL_ERROR;
+    }
     if (symtable->head == NULL) return INTERNAL_ERROR;
     for (struct tree_node *tmp = node->head_child; tmp != NULL; tmp = tmp->next_sibling) {
         switch (tmp->data->type) {

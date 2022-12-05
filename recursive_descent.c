@@ -1,6 +1,8 @@
-//
-// Created by jan on 10/15/22.
-//
+/**
+ * @project Compiler IFJ22
+ * @file    recursive_descent.c
+ * @authors Jan Pavlíček <xpavli95>
+ */
 
 #include "recursive_descent.h"
 #include "code_generator.h"
@@ -9,14 +11,7 @@ int get_token_rec(FILE *input_file, Token_stack *token_stack) {
     Token token;
     init_str(&token.val);
     if (get_token(input_file, &token) != 0) return 1;
-
-    // printf("TOKEN: %s\n", token.val.str);
-    // printf("TOKEN_TYPE: %i\n", token.type);
-
     if (push_token(token_stack, &token) == 1) return 99;
-
-    // printf("TOKEN_STACK TOP: %s\n", get_top(token_stack)->val.str);
-    // printf("TOKEN_STACK TOP_TYPE: %i\n\n", get_top(token_stack)->type);
     return 0;
 }
 
@@ -432,18 +427,12 @@ int analyse_prolog(FILE *input_file, Token_stack *token_stack,
     return analyse_prog(input_file, token_stack, tree);
 }
 
-//#define DEBUG ;
-#ifndef DEBUG
-#define DEBUG if(0)
-#endif
-
 // CALL WITH LEVEL = 0
 void print_tree(struct tree_node *root, int level) {
     if (root == NULL) return;
     for (int i = 0; i < level; i++) {
-    DEBUG   printf(i == level - 1 ? "|" : "  ");
+        printf(i == level - 1 ? "|" : "  ");
     }
-    DEBUG printf("%s TYPE: %i\n", root->data->value, root->data->type);
     struct tree_node *child = root->head_child;
     while (child != NULL) {
         print_tree(child, level + 1);
@@ -456,38 +445,18 @@ int analyse_syntax(FILE *input_file) {
     int stack_result = init_token_stack(&token_stack);
     if (stack_result == 1) return 99;
 
-    // printf("STACK_RESULT: %i\n", stack_result);
-
     struct tn_data *body_data = init_tn_data(BODY, "main");
     struct tree_node *tree = init_tree_node();
     tree->data = body_data;
     int result = analyse_prolog(input_file, &token_stack, tree);
 
-    DEBUG printf("AST\n");
-    DEBUG printf("root: ");
-    print_tree(tree, 0);
-    DEBUG printf("result: %i\n", result);
     if (result == 0) {
         result = semantic_analysis(tree);
-       DEBUG printf("AFTER SEMANTIC TREE\n");
-        DEBUG printf("root: ");
-        print_tree(tree, 0);
     }
-    DEBUG printf("result: %i\n", result);
     if (result == 0) {
         // call generator
         code_generator(tree);
     }
-
-    /*printf("%s\n", tree->data->value);
-    printf("%s\n", tree->head_child->data->value);*/
-
-    // printf("TOKENSSTACK:\n ");
-    /*for (unsigned int i = 0; i < token_stack.free_index; i++) {
-        printf("%s ", token_stack.tokens[i].val.str);
-    }*/
-
-    // printf("\n");
 
     free_tree_node(tree);
     free_tokens_stack(&token_stack);

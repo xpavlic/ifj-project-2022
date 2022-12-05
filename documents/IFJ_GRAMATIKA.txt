@@ -5,6 +5,7 @@
 <prog> -> if ( <expr> ) { <body> } else { <body> } <prog>
 <prog> -> while ( <expr> ) { <body> } <prog>
 <prog> -> return <return_n> ; <prog>
+<prog> -> <expr> ; <prog>
 <prog> -> ?>
 <prog> -> EOF
 
@@ -15,11 +16,11 @@
 
 <arg> -> <term> <next_arg>
 <arg> -> ε
-<next_arg> -> , <term> <next_arg> 
+<next_arg> -> , <term> <next_arg>
 <next_arg> -> ε
 
 <term> -> $id
-<term> -> term_int 
+<term> -> term_int
 <term> -> term_float
 <term> -> null
 <term> -> term_string
@@ -32,6 +33,7 @@
 <body> -> while ( <expr> ) { <body> } <body>
 <body> -> $id = <assign> ; <body>
 <body> -> return <return_n> ; <body>
+<body> -> <expr> ; <body>
 <body> -> ε
 
 <assign> -> <expr>
