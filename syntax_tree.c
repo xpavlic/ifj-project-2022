@@ -1,6 +1,6 @@
 /**
  * @project Compiler IFJ22
- * @file    main.c
+ * @file    syntax_tree.c
  * @authors Jan Pavlíček <xpavli95> Štěpán Nekula <xnekul04>
  */
 

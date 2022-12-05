@@ -1,3 +1,8 @@
+/**
+ * @project Compiler IFJ22 
+ * @file scanner.c
+ * @authors Martin Soukup <xsouku15> Jan Pavlíček <xpavli95>
+*/
 #include "scanner.h"
 
 static char *kwords[] = {

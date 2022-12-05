@@ -1,6 +1,6 @@
 /**
  * @project Compiler IFJ22
- * @file    main.c
+ * @file    token_stack.c
  * @authors Jan Pavlíček <xpavli95>
  */
 
