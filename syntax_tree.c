@@ -1,3 +1,9 @@
+/**
+ * @project Compiler IFJ22
+ * @file    main.c
+ * @authors Jan Pavlíček <xpavli95> Štěpán Nekula <xnekul04>
+ */
+
 #include "syntax_tree.h"
 
 struct tn_data *init_tn_data(int type, const char(*value)) {
