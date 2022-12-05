@@ -352,75 +352,14 @@ int get_token(FILE *file, Token *tk) {
                 }
                 break;
             case state_ESCAPE:
-                if (c == '\\') {
+                if (c == '"') {
                     add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == 't') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == 'n') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == '"') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (isdigit(c)) {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == 'x') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == '$') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if (c == 'v') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if ( c == 'e') {
-                    add_char(&tk->val, c);
-                    state = state_STRING;
-                } else if ( c == 'f') {
-                    add_char(&tk->val,c);
-                    state = state_STRING;
-                } else if ( c == 'r' ) {
-                    add_char(&tk->val,c);
                     state = state_STRING;
                 } else {
                     add_char(&tk->val,c);
                     state = state_STRING;
                 }
                 break;
-
-            /*case state_ESCAPE_NUMBER:
-                if (isdigit(c)) {
-                    indexE++;
-                    escapeNumber[indexE] = c;
-                    add_char(&tk->val, c);
-                    state = state_ESCAPE_NUMBER;
-                } else {
-
-                    ungetc(c, file);
-                    tk->type = state_ERROR;
-                    return 1;
-                }
-                break;
-          
-            case state_ESCAPE_HEX:
-                if (indexH == 2) {
-                    ungetc(c, file);
-                    tk->type = state_ERROR;
-                    return 1;
-                }
-                if (isxdigit(c)) {
-                    indexH++;
-                    add_char(&tk->val, c);
-
-                } else {
-                    ungetc(c, file);
-                    tk->type = state_ERROR;
-                    return 1;
-                }
-                break;*/
             case state_INTDIVIDE:
                 if (c == '/') {
                     ungetc(c, file);
@@ -435,12 +374,20 @@ int get_token(FILE *file, Token *tk) {
                 }
                 break;
             case state_COMMENT:
+                if( !flagPre )
+                {
+                    return 2;
+                }
                 if ( c == EOL || c == EOF) {
                     ungetc(c, file);
                     state = state_START;
                 }
                 break;
             case state_BLOCK_COMMENT:
+                if( !flagPre )
+                {
+                    return 2;
+                }
                 if (c == '*') {
                     state = state_BLOCK_COMMENT_END;
                 } else if (c == EOF) {
