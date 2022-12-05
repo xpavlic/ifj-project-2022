@@ -75,8 +75,6 @@ typedef enum {
     // STRINGS
     state_STRING,
     state_ESCAPE,
-    //state_ESCAPE_NUMBER,
-    //state_ESCAPE_HEX,
     state_CONCANT, //END
 
     //Comments
