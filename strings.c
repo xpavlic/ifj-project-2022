@@ -29,7 +29,7 @@ int add_char(dyn_str *str, char c) {
         str->size *= 2;
         str->str = (char *)realloc(str->str, str->size);
         if(!str->str) {
-            return 1;
+            return 99;
         }
     }
     str->str[str->length] = c;
@@ -40,7 +40,7 @@ int add_char(dyn_str *str, char c) {
 
 int del_last(dyn_str *str) {
     if(str->length == 0)
-        return 1;
+        return 99;
 
     str->length--;
     str->str[str->length] = '\0';
