@@ -87,25 +87,26 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
     Token_stack token_stack;
     Token_stack posfix_stack;
 
-    int prev_token_eval = evaluate_token(first_token, if_while);
-    if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT || prev_token_eval == PRIO_MUL ||
-        prev_token_eval == PRIO_PLUS || prev_token_eval == PRIO_BIGGER) {
-        return 2;
-    }
-
     init_token_stack(&posfix_stack);
     init_token_stack(&token_stack);
 
-    if (pre_first_token != NULL) {
-        if (prev_token_eval != PRIO_EQUAL && prev_token_eval != EXP_END) {
+    int prev_token_eval = evaluate_token(first_token, if_while);
+
+    if (pre_first_token == NULL) {
+        if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT || prev_token_eval == PRIO_MUL ||
+            prev_token_eval == PRIO_PLUS || prev_token_eval == PRIO_BIGGER) {
+            free_precedent_token_stacks(&token_stack, &posfix_stack);
             return 2;
         }
-        if (prev_token_eval != EXP_END) {
-            push_token(&token_stack, first_token);
+    } else {
+        if (prev_token_eval != PRIO_MUL && prev_token_eval != PRIO_PLUS &&
+            prev_token_eval != PRIO_BIGGER && prev_token_eval != EXP_END) {
+            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            return 2;
         }
         push_token(&posfix_stack, pre_first_token);
-
-    } else if (prev_token_eval == NON_TERMINAL) {
+    }
+    if (prev_token_eval == NON_TERMINAL) {
         push_token(&posfix_stack, first_token);
     } else if (prev_token_eval != EXP_END) {
         push_token(&token_stack, first_token);
@@ -217,6 +218,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
                 }
             }
             if (stack_top_eval == EXP_EMPTY) {
+                free_precedent_token_stacks(&token_stack, &posfix_stack);
                 return 2;
             }
         }
