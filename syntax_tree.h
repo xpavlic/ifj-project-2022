@@ -1,6 +1,8 @@
-// syntax_tree.h - rozhraní modulu pro syntax tree (IFJ PROJEKT)
-// Licence: žádná (Public domain)
-// Autor: Štěpán Nekula, Jan pavlíček
+/**
+ * @project Compiler IFJ22
+ * @file    main.c
+ * @authors Jan Pavlíček <xpavli95> Štěpán Nekula <xnekul04>
+ */
 
 #ifndef __SYNTAX_TREE_H__
 #define __SYNTAX_TREE_H__
@@ -80,7 +82,6 @@ struct tn_data {
     char *value;
 };
 
-// TODO REWRITE TO FIX LEAKS
 typedef struct {
     struct tree_node *nodes;
     unsigned int free_index;
@@ -138,18 +139,54 @@ void free_children(struct tree_node *node);
  */
 void free_tree_node(struct tree_node *node);
 
+/**
+ * allocates and initiates node stack
+ * @param stack stack to allocate
+ * @return 0 if success 1 if error
+ */
 int init_node_stack(Node_stack *stack);
 
+/**
+ * Copies tree_node and adds it as children of another tree_node
+ * @param parent_node parent
+ * @param new_node node to by copied
+ * @return new copy of node
+ */
 struct tree_node *add_tree_node_object(struct tree_node *parent_node, struct tree_node *new_node);
 
+/**
+ * Returns top element of stack of tree nodes
+ * @param stack stack of tree nodes
+ * @return top element of stack
+ */
 struct tree_node *node_stack_top(Node_stack *stack);
 
+/**
+ * Checks if stack of tree nodes is empty
+ * @param stack stack of tree nodes
+ * @return 1 if empty else 0
+ */
 int is_empty_node_stack(Node_stack *stack);
 
+/**
+ * Add tree node to stack of tree nodes
+ * @param stack stack of tree nodes
+ * @param node node to be added
+ * @return 0 if success else 1
+ */
 int node_stack_push(Node_stack *stack, struct tree_node *node);
 
+/**
+ * Removes last item from stack of tree nodes
+ * @param stack stack of tree nodes
+ * @return 0 if success else 1
+ */
 int node_stack_pop(Node_stack *stack);
 
+/**
+ * Deallocates stack of tree nodes
+ * @param stack stack of tree nodes
+ */
 void free_node_stack(Node_stack *stack);
 
 #endif // __SYNTAX_TREE_H__

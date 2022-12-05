@@ -1,10 +1,12 @@
-//
-// Created by jan on 17.11.22.
-//
+/**
+ * @project Compiler IFJ22
+ * @file    precedent.c
+ * @authors Jan Pavlíček <xpavli95>
+ */
 
 #include "precedent.h"
 
-int evaluate_token(Token *token, int if_while) {
+enum precedent_types evaluate_token(Token *token, int if_while) {
     if (token == NULL) return EXP_EMPTY;
     else if (token->type == state_VARIABLE || token->type == state_INT || token->type == state_STRING ||
              token->type == state_FLOAT || strcmp(token->val.str, "null") == 0) {
@@ -22,9 +24,9 @@ int evaluate_token(Token *token, int if_while) {
     else return EXP_ERROR;
 }
 
-void free_precedent_token_stacks(Token_stack *token_stack, Token_stack *posfix_stack) {
+void free_precedent_token_stacks(Token_stack *token_stack, Token_stack *postfix_stack) {
     free_tokens_stack(token_stack);
-    free_tokens_stack(posfix_stack);
+    free_tokens_stack(postfix_stack);
 }
 
 enum tree_node_type state_to_node_type(state scanner_type) {
@@ -46,13 +48,12 @@ enum tree_node_type state_to_node_type(state scanner_type) {
     return T_NULL;
 }
 
-//TODO FIX MEMORY LEAKS
-int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expression_root) {
+int build_expression_tree(Token_stack *postfix_stack, struct tree_node *expression_root) {
     Node_stack node_stack;
     init_node_stack(&node_stack);
     Token token;
-    for (unsigned int i = 0; i < posfix_stack->free_index; i++) {
-        token = posfix_stack->tokens[i];
+    for (unsigned int i = 0; i < postfix_stack->free_index; i++) {
+        token = postfix_stack->tokens[i];
         if (token.type == state_VARIABLE || token.type == state_INT || token.type == state_STRING ||
             token.type == state_FLOAT || strcmp(token.val.str, "null") == 0) {
             struct tree_node *new_node = init_tree_node();
@@ -81,13 +82,11 @@ int build_expression_tree(Token_stack *posfix_stack, struct tree_node *expressio
 
 int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_token, struct tree_node *expression_root,
                       int if_while) {
-    //printf("ANALYSE EXPRESSION\n");
-    //printf("TOKEN: %s\n TOKEN_TYPE: %i\n", first_token->val.str, first_token->type);
     Token token;
     Token_stack token_stack;
-    Token_stack posfix_stack;
+    Token_stack postfix_stack;
 
-    init_token_stack(&posfix_stack);
+    init_token_stack(&postfix_stack);
     init_token_stack(&token_stack);
 
     int prev_token_eval = evaluate_token(first_token, if_while);
@@ -95,19 +94,19 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
     if (pre_first_token == NULL) {
         if (prev_token_eval == EXP_ERROR || prev_token_eval == RIGHT_PARENT || prev_token_eval == PRIO_MUL ||
             prev_token_eval == PRIO_PLUS || prev_token_eval == PRIO_BIGGER) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
     } else {
         if (prev_token_eval != PRIO_MUL && prev_token_eval != PRIO_PLUS &&
             prev_token_eval != PRIO_BIGGER && prev_token_eval != EXP_END) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
-        push_token(&posfix_stack, pre_first_token);
+        push_token(&postfix_stack, pre_first_token);
     }
     if (prev_token_eval == NON_TERMINAL) {
-        push_token(&posfix_stack, first_token);
+        push_token(&postfix_stack, first_token);
     } else if (prev_token_eval != EXP_END) {
         push_token(&token_stack, first_token);
     }
@@ -115,48 +114,47 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
     while (prev_token_eval != EXP_END) {
         init_str(&token.val);
         if (get_token(input_file, &token) != 0) return 1;
-        //printf("TOKEN: %s\n TOKEN_TYPE: %i\n", token.val.str, token.type);
         int token_eval = evaluate_token(&token, if_while);
         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
         if (token_eval == EXP_ERROR) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if ((token_eval == PRIO_MUL || token_eval == PRIO_BIGGER || token_eval == PRIO_EQUAL ||
              token_eval == PRIO_PLUS) && (prev_token_eval != NON_TERMINAL && prev_token_eval != RIGHT_PARENT)) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if (token_eval == RIGHT_PARENT && (prev_token_eval != NON_TERMINAL && prev_token_eval != RIGHT_PARENT)) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if (token_eval == NON_TERMINAL && (prev_token_eval == RIGHT_PARENT || prev_token_eval == NON_TERMINAL)) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if (token_eval == EXP_END && (prev_token_eval != RIGHT_PARENT && prev_token_eval != NON_TERMINAL)) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if (token_eval == LEFT_PARENT && (prev_token_eval == RIGHT_PARENT || prev_token_eval == NON_TERMINAL)) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
 
         if (token_eval == NON_TERMINAL) {
-            push_token(&posfix_stack, &token);
+            push_token(&postfix_stack, &token);
         } else if (token_eval == LEFT_PARENT) {
             push_token(&token_stack, &token);
         } else if (token_eval == PRIO_MUL) {
             if (stack_top_eval == PRIO_MUL) {
                 while (1) {
-                    push_token(&posfix_stack, get_top(&token_stack));
+                    push_token(&postfix_stack, get_top(&token_stack));
                     remove_last_token(&token_stack);
                     stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     if (stack_top_eval != PRIO_MUL) {
@@ -168,7 +166,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
         } else if (token_eval == PRIO_PLUS) {
             if (stack_top_eval == PRIO_PLUS || stack_top_eval == PRIO_MUL) {
                 while (1) {
-                    push_token(&posfix_stack, get_top(&token_stack));
+                    push_token(&postfix_stack, get_top(&token_stack));
                     remove_last_token(&token_stack);
                     stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     if (stack_top_eval != PRIO_MUL && stack_top_eval != PRIO_PLUS) {
@@ -180,7 +178,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
         } else if (token_eval == PRIO_BIGGER) {
             if (stack_top_eval == PRIO_PLUS || stack_top_eval == PRIO_MUL || stack_top_eval == PRIO_BIGGER) {
                 while (1) {
-                    push_token(&posfix_stack, get_top(&token_stack));
+                    push_token(&postfix_stack, get_top(&token_stack));
                     remove_last_token(&token_stack);
                     stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     if (stack_top_eval != PRIO_MUL && stack_top_eval != PRIO_PLUS &&
@@ -193,7 +191,7 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
         } else if (token_eval == PRIO_EQUAL) {
             if (stack_top_eval != LEFT_PARENT && stack_top_eval != EXP_EMPTY) {
                 while (stack_top_eval != EXP_EMPTY) {
-                    push_token(&posfix_stack, get_top(&token_stack));
+                    push_token(&postfix_stack, get_top(&token_stack));
                     remove_last_token(&token_stack);
                     stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     if (stack_top_eval == LEFT_PARENT) {
@@ -211,44 +209,33 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
                         remove_last_token(&token_stack);
                         break;
                     } else {
-                        push_token(&posfix_stack, get_top(&token_stack));
+                        push_token(&postfix_stack, get_top(&token_stack));
                         remove_last_token(&token_stack);
                         stack_top_eval = evaluate_token(get_top(&token_stack), if_while);
                     }
                 }
             }
             if (stack_top_eval == EXP_EMPTY) {
-                free_precedent_token_stacks(&token_stack, &posfix_stack);
+                free_precedent_token_stacks(&token_stack, &postfix_stack);
                 return 2;
             }
         }
         prev_token_eval = token_eval;
     }
 
-    //remove end from stack
     while (!is_empty(&token_stack)) {
         if (get_top(&token_stack)->type == state_LEFTPARENT) {
-            free_precedent_token_stacks(&token_stack, &posfix_stack);
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
             return 2;
         }
-        push_token(&posfix_stack, get_top(&token_stack));
+        push_token(&postfix_stack, get_top(&token_stack));
         remove_last_token(&token_stack);
     }
 
-    /*
-    printf("POSFIX STACK:\n ");
-    for (unsigned int i = 0; i < posfix_stack.free_index; i++) {
-        printf("%s ", posfix_stack.tokens[i].val.str);
-    }
-    printf("\n");
-    */
-
-    if (!is_empty(&posfix_stack) && expression_root != NULL) {
-        build_expression_tree(&posfix_stack, expression_root);
+    if (!is_empty(&postfix_stack) && expression_root != NULL) {
+        build_expression_tree(&postfix_stack, expression_root);
     }
 
-    //print_tree(expression_root, 0);
-
-    free_precedent_token_stacks(&token_stack, &posfix_stack);
+    free_precedent_token_stacks(&token_stack, &postfix_stack);
     return 0;
 }

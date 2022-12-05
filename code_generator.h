@@ -1,6 +1,6 @@
 /**
  * @project Compiler IFJ22
- * @file    code_generaotr.h
+ * @file    code_generator.h
  * @authors Stepan Nekula <xnekul04>
  */
 
