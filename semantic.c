@@ -62,7 +62,7 @@ enum error_state semantic_analysis(struct tree_node *node) {
     if (result_state != OK) {
         FREE_AND_RETURN
     }
-    #define NDEBUG if(0)
+#define NDEBUG if (0)
     NDEBUG print_table(fnc_symtable);
     /* Spracovanie tela programu */
     result_state = traverse_body(fnc_symtable, symtable, node, "main");
@@ -148,7 +148,7 @@ enum error_state declarations_traversal(symtable_t *fnc_symtable, struct tree_no
 }
 
 void print_table(symtable_t *symtable) {
-    struct htab *hash_table = symtable->head->hash_table;
+    htab_t *hash_table = symtable->head->hash_table;
     htab_item_t **tmp = hash_table->arr_ptr;
     for (size_t i = 0; i < hash_table->arr_size; i++) {
         printf("-%ld- ", i);

@@ -56,7 +56,7 @@ typedef struct value_info {
 /**
  * @brief Hash table pair
  */
-typedef struct htab_pair {
+typedef struct {
     htab_key_t key;
     void *value;
 } htab_pair_t;
@@ -74,7 +74,7 @@ typedef struct htab_item {
  * @brief Hashtable
  *
  */
-typedef struct htab {
+typedef struct {
     size_t size;
     size_t arr_size;
     htab_item_t **arr_ptr;
@@ -85,7 +85,7 @@ typedef struct htab {
  *
  */
 typedef struct symtable_item {
-    struct htab *hash_table;
+    htab_t *hash_table;
     struct symtable_item *next;
     char *name;
 } symtable_item_t;
@@ -94,159 +94,157 @@ typedef struct symtable_item {
  * @brief Symbol table structure
  *
  */
-typedef struct symtable {
-    struct symtable_item *head;
+typedef struct {
+    symtable_item_t *head;
     size_t count;
     void (*free_func)(void *);
 } symtable_t;
 
 /**
- * @brief Symtable constructor, sets function for later data deallocation
- * @param void (*func)(void*)
- * @return struct symtable *
+ * @brief Symbl table constructor, sets function for later data deallocation
+ * @param func function for data deallocation
+ * @return symbol table stack if success, else NULL
  */
-struct symtable *symtable_init(void (*func)(void *));
+symtable_t *symtable_init(void (*func)(void *));
 
 /**
- * @brief table destructor
- * @param struct symtable * t
- * @return void
+ * @brief Table destructor
+ * @param t symbol table stack to be freed
  */
-void symtable_free(struct symtable *t);
+void symtable_free(symtable_t *t);
 
 /**
- * @brief Removes all frames from symtable
- * @param struct symtable * t
- * @return void
+ * @brief Removes all frames from symbol table
+ * @param t symbol table stack where frames will be cleared
  */
-void symtable_clear(struct symtable *t);
+void symtable_clear(symtable_t *t);
 
 /**
- * @brief Adds new frame to the top of symtable
- * @param struct symtable * t
- * @return int 0 if sucess, 1 else
+ * @brief Adds new frame to the top of symbol table
+ * @param t symbol table stack to add frame
+ * @return 0 if sucess, else 1
  */
-int symtable_add_frame(struct symtable *t);
+int symtable_add_frame(symtable_t *t);
 
 /**
- * @brief Removes top frame from symtable
- * @param struct symtable * t
- * @return void
+ * @brief Removes top frame from symbol table
+ * @param t symbol table stack to remove frame from
  */
-void symtable_remove_frame(struct symtable *t);
+void symtable_remove_frame(symtable_t *t);
 
 /**
  * @brief Finds htab_pair_t by string key
- * @param struct symtable * t
- * @param htab_key_t key
- * @return htab_pair_t *
+ * @param t symbol table stack where top frame will be searched
+ * @param key string
+ * @return structure with matching key if sucess, else NULL
  */
-htab_pair_t *symtable_find(struct symtable *t, htab_key_t key);
+htab_pair_t *symtable_find(symtable_t *t, htab_key_t key);
 
 /**
  * @brief Adds new htab_pair_t with given key
  *
- * @param t
- * @param key
- * @param value_create
- * @return htab_pair_t*
+ * @param t symbol table stack where new pair will be added
+ * @param key string
+ * @param value_create function to create matching value_t structure
+ * @return structure with matching key if sucess, else NULL
  */
-htab_pair_t *symtable_add(struct symtable *t, htab_key_t key, value_t *(*value_create)());
+htab_pair_t *symtable_add(symtable_t *t, htab_key_t key, value_t *(*value_create)());
 
 /**
- * @brief hash function for htab
- * @param htab_key_t str
- * @return size_t
+ * @brief Hash function
+ * @param str string
+ * @return index to a bucket array if success, else 0
  */
 size_t htab_hash_function(htab_key_t str);
 
 /**
  * @brief Hashtable constructor
- * @param size_t n
- * @return htab_t*
+ * @param n initialization size of a bucket array
+ * @return hashtable structure if success, else NULL
  */
 htab_t *htab_init(size_t n);
 
 /**
  * @brief Hashtable destructor
- * @param htab_t * t
- * @param void (*f)(void*)
+ * @param t hashtable structure
+ * @param f function for data deallocation
  */
 void htab_free(htab_t *t, void (*f)(void *));
 
 /**
  * @brief Removes all the pairs in the hashtable
- * @param htab_t * t
- * @param void (*f)(void*)
+ * @param t hashtable structure
+ * @param f function for data deallocation
  */
 void htab_clear(htab_t *t, void (*f)(void *));
 
 /**
  * @brief Returns number of records in table
  * @param const htab_t * t
- * @return size_t
+ * @return number of record in hashtable on success, else 0
  */
 size_t htab_size(const htab_t *t);
 
 /**
  * @brief Returns size of array
- * @param const htab_t * t
- * @return size_t
+ * @param t hashtable structure
+ * @return number of buckets of hashtable on success, else 0
  */
 size_t htab_bucket_count(const htab_t *t);
 
 /**
- * @brief Changes size of table
- * @param htab_t *t
- * @param size_t newn
+ * @brief Changes size of hashtable
+ * @param t hashtable structure tio resize
+ * @param newn new number of buckets to resize
  */
 void htab_resize(htab_t *t, size_t newn);
+
 /**
- * @brief finds pair in table
- * @param const htab_t * t
+ * @brief Finds pair in hashtable
+ * @param t hashtable strusture to search in
  * @param htab_key_t key
- * @return htab_pair_t *
+ * @return pair structure with matching key if sucess, else NULL
  */
 htab_pair_t *htab_find(htab_t *t, htab_key_t key);
 
 /**
  * @brief Adds pair into table
- * @param const htab_t * t
- * @param htab_key_t key
- * @return htab_pair_t *
+ * @param t hahstable structure to search in/add into
+ * @param key string
+ * @return pair structure with matching key if sucess, else NULL
  */
 htab_pair_t *htab_lookup_add(htab_t *t, htab_key_t key, value_t *(*value_create)());
 
 /**
- * @brief Processes all pairs and calls a function on them. Function f cannot modify key and create/remove pair.
+ * @brief Processes all pairs and calls a function on them(function f cannot modify key and create/remove pair)
  *
- * @param t
- * @param f
+ * @param t hashtable structure to process
+ * @param f function to call on a pair
  */
 void htab_for_each(const htab_t *t, void (*f)(htab_pair_t *data));
 
 /**
- * @brief does nothing
+ * @brief Does nothing
  */
 void nope(void);
 
 /**
  * @brief value_fnc_t constructor
  *
- * @return value_t*
+ * @return structure that contains info about function
  */
 value_t *value_create_fnc();
 
 /**
  * @brief value_var_t constructor
  *
- * @return value_t*
+ * @return structure that contains info about variable
  */
 value_t *value_create_var();
 
 /**
  * @brief value_null_t constructor
  *
- * @return value_t*
+ * @return NULL
  */
 value_t *value_create_null();

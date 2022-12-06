@@ -6,8 +6,8 @@
 
 #include "symtable.h"
 
-struct symtable *symtable_init(void (*func)(void *)) {
-    struct symtable *ptr = malloc(sizeof(struct symtable));
+symtable_t *symtable_init(void (*func)(void *)) {
+    symtable_t *ptr = malloc(sizeof(symtable_t));
     if (ptr == NULL) {
         return NULL;
     }
@@ -17,19 +17,19 @@ struct symtable *symtable_init(void (*func)(void *)) {
     return ptr;
 }
 
-void symtable_free(struct symtable *t) {
+void symtable_free(symtable_t *t) {
     symtable_clear(t);
     free(t);
 }
 
-void symtable_clear(struct symtable *t) {
+void symtable_clear(symtable_t *t) {
     if (t == NULL) return;
     while (t->head != NULL) {
         symtable_remove_frame(t);
     }
 }
 
-int symtable_add_frame(struct symtable *t) {
+int symtable_add_frame(symtable_t *t) {
     if (t == NULL) return 1;
     t->count++;
     symtable_item_t *tmp = t->head;
@@ -44,7 +44,7 @@ int symtable_add_frame(struct symtable *t) {
     return 0;
 }
 
-void symtable_remove_frame(struct symtable *t) {
+void symtable_remove_frame(symtable_t *t) {
     if (t == NULL) return;
     if (t->head == NULL) return;
     t->count--;
@@ -55,10 +55,10 @@ void symtable_remove_frame(struct symtable *t) {
     free(tmp);
 }
 
-htab_pair_t *symtable_find(struct symtable *t, htab_key_t key) {
+htab_pair_t *symtable_find(symtable_t *t, htab_key_t key) {
     if (t == NULL) return NULL;
     htab_pair_t *found_value = NULL;
-    struct symtable_item *node = t->head;
+    symtable_item_t *node = t->head;
     if (node == NULL) {
         return NULL;
     }
@@ -68,7 +68,7 @@ htab_pair_t *symtable_find(struct symtable *t, htab_key_t key) {
     return NULL;
 }
 
-htab_pair_t *symtable_add(struct symtable *t, htab_key_t key, value_t *(*value_create)()) {
+htab_pair_t *symtable_add(symtable_t *t, htab_key_t key, value_t *(*value_create)()) {
     if (t == NULL) return NULL;
     if (t->head == NULL) {
         if (symtable_add_frame(t)) {
