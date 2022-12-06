@@ -512,13 +512,14 @@ void print_string_for_expression(char * string){
         else if(string[i]=='\\'){
             if(isokta(string+i+1)){
                     dec_num = 0;
-                    dec_num =dec_num+ (string[i+1]-'0')*8;
-                    dec_num =dec_num+ (string[i+2]-'0')*8;
-                    dec_num =dec_num+ (string[i+3]-'0');
+                    dec_num =dec_num*8+ (string[i+1]-'0');
+                    dec_num =dec_num*8+ (string[i+2]-'0');
+                    dec_num =dec_num*8+ (string[i+3]-'0');
                     printf("\\%03d", dec_num);
                     i=i+2;
             }
             else if(string[i+1]=='x' && isxdigit(string[i+2]) && isxdigit(string[i+3])){
+                    dec_num = 0;
                     dec_num = hexa2decimal(string[i+2])*16;
                     dec_num = dec_num + hexa2decimal(string[i+3]);
                     printf("\\%03d", dec_num);
