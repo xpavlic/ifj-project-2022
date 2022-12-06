@@ -56,7 +56,7 @@ typedef struct value_info {
 /**
  * @brief Hash table pair
  */
-typedef struct htab_pair {
+typedef struct {
     htab_key_t key;
     void *value;
 } htab_pair_t;
@@ -74,7 +74,7 @@ typedef struct htab_item {
  * @brief Hashtable
  *
  */
-typedef struct htab {
+typedef struct {
     size_t size;
     size_t arr_size;
     htab_item_t **arr_ptr;
@@ -84,8 +84,8 @@ typedef struct htab {
  * @brief Symtable frame
  *
  */
-typedef struct {
-    struct htab *hash_table;
+typedef struct symtable_item {
+    htab_t *hash_table;
     struct symtable_item *next;
     char *name;
 } symtable_item_t;
@@ -105,7 +105,7 @@ typedef struct {
  * @param func function for data deallocation
  * @return symbol table stack if success, else NULL
  */
-struct symtable *symtable_init(void (*func)(void *));
+symtable_t *symtable_init(void (*func)(void *));
 
 /**
  * @brief Table destructor
@@ -117,7 +117,7 @@ void symtable_free(symtable_t *t);
  * @brief Removes all frames from symbol table
  * @param t symbol table stack where frames will be cleared
  */
-void symtable_clear(struct symtable *t);
+void symtable_clear(symtable_t *t);
 
 /**
  * @brief Adds new frame to the top of symbol table
