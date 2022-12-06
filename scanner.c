@@ -334,7 +334,10 @@ int get_token(FILE *file, Token *tk) {
                 } else if (c == '\\') {
                     add_char(&tk->val, c);
                     state = state_ESCAPE;
-
+                } else if ( c == '$' ) {
+                    ungetc(c, file);
+                    tk->type = state_ERROR;
+                    return 1;
                 } else if (c > 31) {
                     add_char(&tk->val, c);
                 } else {
