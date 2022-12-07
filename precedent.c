@@ -223,6 +223,12 @@ int analyse_precedent(FILE *input_file, Token *first_token, Token *pre_first_tok
         prev_token_eval = token_eval;
     }
 
+    if (!is_empty(&token_stack) && if_while == 1) {
+        if (token_stack.tokens[0].type != state_LEFTPARENT) {
+            free_precedent_token_stacks(&token_stack, &postfix_stack);
+            return 2;
+        }
+    }
     while (!is_empty(&token_stack)) {
         if (get_top(&token_stack)->type == state_LEFTPARENT) {
             free_precedent_token_stacks(&token_stack, &postfix_stack);
